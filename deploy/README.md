@@ -225,6 +225,23 @@ See `.env.example` for all available options.
 
 > **Note:** The `docker-deploy.sh` script automatically generates `JWT_SECRET`, `TOTP_ENCRYPTION_KEY`, and `POSTGRES_PASSWORD` for you.
 
+### Dokploy Standalone Network
+
+When deploying only the Sub2API app with external Dokploy PostgreSQL and Redis
+services, use `docker-compose.standalone.yml` and attach the app to the same
+Docker network as those services:
+
+```env
+DOKPLOY_NETWORK=dokploy-network
+DATABASE_HOST=sub2api-db
+REDIS_HOST=sub2api-redis
+```
+
+If startup fails with `lookup <database-host> on 127.0.0.11:53`, the app
+container cannot resolve the database service name. Set `DOKPLOY_NETWORK` to
+the actual network used by the Dokploy database/Redis containers, or attach the
+Sub2API app to that network in Dokploy.
+
 ### Easy Migration (Local Directory Version)
 
 When using `docker-compose.local.yml`, all data is stored in local directories, making migration simple:
