@@ -1,0 +1,34 @@
+# =============================================================================
+# Sub2API Docker Compose - Standalone Local Build Override
+# =============================================================================
+# Use this together with docker-compose.standalone.yml when you want to publish
+# the current repository checkout instead of the prebuilt public image.
+#
+# Usage from the repository root:
+#   docker-compose \
+#     -f deploy/docker-compose.standalone.yml \
+#     -f deploy/docker-compose.standalone.build.yml \
+#     up -d --build
+#
+# Usage from the deploy directory:
+#   docker-compose \
+#     -f docker-compose.standalone.yml \
+#     -f docker-compose.standalone.build.yml \
+#     up -d --build
+#
+# The root Dockerfile builds the Vue frontend first, copies the dist into the
+# Go backend, and compiles the server with `-tags embed`.
+# =============================================================================
+
+services:
+  sub2api:
+    image: ${SUB2API_IMAGE:-sub2api:local}
+    pull_policy: build
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        GOPROXY: ${GOPROXY:-https://goproxy.cn,direct}
+        GOSUMDB: ${GOSUMDB:-sum.golang.google.cn}
+        VERSION: ${VERSION:-}
+        COMMIT: ${COMMIT:-local}

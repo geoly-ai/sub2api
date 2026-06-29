@@ -8,13 +8,18 @@
 #   1. Copy .env.example to .env and configure database/redis connection
 #   2. Set DOKPLOY_NETWORK to the Docker network shared by the app, PostgreSQL,
 #      and Redis (default: dokploy-network)
-#   3. docker-compose -f docker-compose.standalone.yml up -d
+#   3. Pull official image:
+#      docker-compose -f docker-compose.standalone.yml pull
+#      docker-compose -f docker-compose.standalone.yml up -d
+#      Or build from the current checkout:
+#      docker-compose -f docker-compose.standalone.yml -f docker-compose.standalone.build.yml up -d --build
 #   4. Access: http://localhost:8080
 # =============================================================================
 
 services:
   sub2api:
-    image: weishaw/sub2api:latest
+    image: ${SUB2API_IMAGE:-weishaw/sub2api:latest}
+    pull_policy: ${SUB2API_PULL_POLICY:-always}
     container_name: sub2api
     restart: unless-stopped
     ulimits:

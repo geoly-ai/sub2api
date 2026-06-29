@@ -242,6 +242,30 @@ container cannot resolve the database service name. Set `DOKPLOY_NETWORK` to
 the actual network used by the Dokploy database/Redis containers, or attach the
 Sub2API app to that network in Dokploy.
 
+#### Publishing the Current Checkout
+
+`docker-compose.standalone.yml` uses the prebuilt image by default. To make sure
+frontend changes from the current repository checkout are included, build the
+image locally with the standalone build override:
+
+```bash
+docker-compose \
+  -f deploy/docker-compose.standalone.yml \
+  -f deploy/docker-compose.standalone.build.yml \
+  up -d --build
+```
+
+This path runs the root `Dockerfile`, which builds the Vue frontend and embeds
+the generated files into the Go binary with `-tags embed`.
+
+To keep using the prebuilt image, pull before restarting so Docker does not keep
+running a stale local `latest` image:
+
+```bash
+docker-compose -f deploy/docker-compose.standalone.yml pull
+docker-compose -f deploy/docker-compose.standalone.yml up -d
+```
+
 ### Easy Migration (Local Directory Version)
 
 When using `docker-compose.local.yml`, all data is stored in local directories, making migration simple:
