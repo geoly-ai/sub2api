@@ -19,6 +19,10 @@ type stubAdminService struct {
 	redeems              []service.RedeemCode
 	boundAuthIdentity    *service.AdminBindAuthIdentityInput
 	boundAuthIdentityFor int64
+	createdUsers         []*service.CreateUserInput
+	updatedUsers         []int64
+	updatedUserInputs    []*service.UpdateUserInput
+	balanceUpdates       []balanceUpdateCall
 	createdAccounts      []*service.CreateAccountInput
 	createdProxies       []*service.CreateProxyInput
 	updatedProxyIDs      []int64
@@ -70,6 +74,13 @@ type stubAdminService struct {
 		calls     int
 	}
 	mu sync.Mutex
+}
+
+type balanceUpdateCall struct {
+	userID    int64
+	balance   float64
+	operation string
+	notes     string
 }
 
 func newStubAdminService() *stubAdminService {
@@ -165,12 +176,19 @@ func (s *stubAdminService) GetUserIncludeDeleted(ctx context.Context, id int64) 
 }
 
 func (s *stubAdminService) CreateUser(ctx context.Context, input *service.CreateUserInput) (*service.User, error) {
-	user := service.User{ID: 100, Email: input.Email, Status: service.StatusActive}
+	s.createdUsers = append(s.createdUsers, input)
+	user := service.User{ID: int64(100 + len(s.createdUsers) - 1), Email: input.Email, Status: service.StatusActive}
 	return &user, nil
 }
 
 func (s *stubAdminService) UpdateUser(ctx context.Context, id int64, input *service.UpdateUserInput) (*service.User, error) {
-	user := service.User{ID: id, Email: "updated@example.com", Status: service.StatusActive}
+	s.updatedUsers = append(s.updatedUsers, id)
+	s.updatedUserInputs = append(s.updatedUserInputs, input)
+	status := service.StatusActive
+	if input.Status != "" {
+		status = input.Status
+	}
+	user := service.User{ID: id, Email: "updated@example.com", Status: status}
 	return &user, nil
 }
 
@@ -179,6 +197,7 @@ func (s *stubAdminService) DeleteUser(ctx context.Context, id int64) error {
 }
 
 func (s *stubAdminService) UpdateUserBalance(ctx context.Context, userID int64, balance float64, operation string, notes string) (*service.User, error) {
+	s.balanceUpdates = append(s.balanceUpdates, balanceUpdateCall{userID: userID, balance: balance, operation: operation, notes: notes})
 	user := service.User{ID: userID, Balance: balance, Status: service.StatusActive}
 	return &user, nil
 }

@@ -415,6 +415,7 @@ export default {
     channelPricing: '渠道定价',
     channelMonitor: '渠道监控',
     channelStatus: '渠道状态',
+    mcp: 'MCP 配置',
     riskControl: '风控中心',
   },
 
@@ -1504,6 +1505,11 @@ export default {
       systemSettings: '系统设置',
       configureSystem: '配置系统设置',
       failedToLoad: '加载仪表盘数据失败'
+    },
+
+    mcp: {
+      title: 'MCP 配置',
+      description: '复制管理员 MCP 连接配置'
     },
 
     backup: {

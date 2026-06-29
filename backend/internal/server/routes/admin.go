@@ -23,6 +23,9 @@ func RegisterAdminRoutes(
 		// 部署与运营合规确认
 		registerAdminComplianceRoutes(admin, h)
 
+		// 管理员 MCP
+		registerAdminMCPRoutes(admin, h)
+
 		// 仪表盘
 		registerDashboardRoutes(admin, h)
 
@@ -107,6 +110,10 @@ func RegisterAdminRoutes(
 		// 邀请返利（专属用户管理）
 		registerAffiliateRoutes(admin, h)
 	}
+}
+
+func registerAdminMCPRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	admin.POST("/mcp", h.Admin.User.HandleMCP)
 }
 
 func registerAdminComplianceRoutes(admin *gin.RouterGroup, h *handler.Handlers) {

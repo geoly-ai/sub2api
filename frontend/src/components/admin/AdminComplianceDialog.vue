@@ -105,9 +105,7 @@ import BaseDialog from '@/components/common/BaseDialog.vue'
 import Input from '@/components/common/Input.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { useAdminComplianceStore, useAppStore, useAuthStore } from '@/stores'
-import { getLocale } from '@/i18n'
 import zhDocument from '../../../../docs/legal/admin-compliance.zh.md?raw'
-import enDocument from '../../../../docs/legal/admin-compliance.en.md?raw'
 
 const { t } = useI18n()
 const complianceStore = useAdminComplianceStore()
@@ -124,13 +122,8 @@ marked.setOptions({
 const visible = computed(() => authStore.isAuthenticated && authStore.isAdmin && complianceStore.shouldShow)
 const expectedPhrase = computed(() => complianceStore.expectedPhrase)
 const canSubmit = computed(() => typedPhrase.value.trim() === expectedPhrase.value)
-const currentDocument = computed(() => getLocale() === 'zh' ? zhDocument : enDocument)
-const documentUrl = computed(() => {
-  if (getLocale() === 'zh') {
-    return complianceStore.status?.document_url_zh || 'https://github.com/Wei-Shaw/sub2api/blob/main/docs/legal/admin-compliance.zh.md'
-  }
-  return complianceStore.status?.document_url_en || 'https://github.com/Wei-Shaw/sub2api/blob/main/docs/legal/admin-compliance.en.md'
-})
+const currentDocument = computed(() => zhDocument)
+const documentUrl = computed(() => complianceStore.status?.document_url_zh || 'https://github.com/Wei-Shaw/sub2api/blob/main/docs/legal/admin-compliance.zh.md')
 const inputError = computed(() => {
   if (!attemptedSubmit.value || canSubmit.value) {
     return ''

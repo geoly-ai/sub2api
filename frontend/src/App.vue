@@ -26,6 +26,24 @@ function updateDocumentTitle() {
   document.title = resolveRouteDocumentTitle(route, appStore.siteName, customMenuItems)
 }
 
+function updateRobotsMeta() {
+  const selector = 'meta[name="robots"][data-route-managed="true"]'
+  let meta = document.head.querySelector<HTMLMetaElement>(selector)
+  if (route.path === '/home') {
+    if (!meta) {
+      meta = document.createElement('meta')
+      meta.name = 'robots'
+      meta.setAttribute('data-route-managed', 'true')
+      document.head.appendChild(meta)
+    }
+    meta.content = 'noindex,nofollow'
+    return
+  }
+  if (meta) {
+    meta.remove()
+  }
+}
+
 /**
  * Update favicon dynamically
  * @param logoUrl - URL of the logo to use as favicon
@@ -65,6 +83,12 @@ watch(
   ],
   updateDocumentTitle,
   { deep: true }
+)
+
+watch(
+  () => route.path,
+  updateRobotsMeta,
+  { immediate: true }
 )
 
 // Watch for authentication state and manage subscription data + announcements

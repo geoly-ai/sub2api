@@ -170,7 +170,6 @@ describe('KeyUsageView daily detail', () => {
       global: {
         stubs: {
           RouterLink: { template: '<a><slot /></a>' },
-          LocaleSwitcher: true,
           Icon: true,
         },
       },

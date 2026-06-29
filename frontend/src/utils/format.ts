@@ -3,7 +3,7 @@
  * 参考 CRS 项目的 format.js 实现
  */
 
-import { i18n, getLocale } from '@/i18n'
+import { i18n, INTL_LOCALE } from '@/i18n'
 
 /**
  * 格式化相对时间
@@ -39,12 +39,11 @@ export function formatRelativeTime(date: string | Date | null | undefined): stri
 export function formatNumber(num: number | null | undefined): string {
   if (num === null || num === undefined) return '0'
 
-  const locale = getLocale()
   const absNum = Math.abs(num)
 
   // Use Intl.NumberFormat for compact notation if supported and needed
   // Note: Compact notation in 'zh' uses '万/亿', which is appropriate for Chinese
-  const formatter = new Intl.NumberFormat(locale, {
+  const formatter = new Intl.NumberFormat(INTL_LOCALE, {
     notation: absNum >= 10000 ? 'compact' : 'standard',
     maximumFractionDigits: 1
   })
@@ -61,12 +60,10 @@ export function formatNumber(num: number | null | undefined): string {
 export function formatCurrency(amount: number | null | undefined, currency: string = 'USD'): string {
   if (amount === null || amount === undefined) return '$0.00'
 
-  const locale = getLocale()
-
   // For very small amounts, show more decimals
   const fractionDigits = amount > 0 && amount < 0.01 ? 6 : 2
 
-  return new Intl.NumberFormat(locale, {
+  return new Intl.NumberFormat(INTL_LOCALE, {
     style: 'currency',
     currency: currency,
     minimumFractionDigits: fractionDigits,
@@ -117,7 +114,7 @@ export function formatDate(
   const d = new Date(date)
   if (isNaN(d.getTime())) return ''
 
-  const locale = localeOverride ?? getLocale()
+  const locale = localeOverride ?? INTL_LOCALE
   return new Intl.DateTimeFormat(locale, options).format(d)
 }
 

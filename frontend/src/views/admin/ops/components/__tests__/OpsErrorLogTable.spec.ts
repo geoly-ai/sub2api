@@ -2,7 +2,6 @@ import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import OpsErrorLogTable from '../OpsErrorLogTable.vue'
 import zhLocale from '@/i18n/locales/zh'
-import enLocale from '@/i18n/locales/en'
 import type { OpsErrorLog } from '@/api/admin/ops'
 
 vi.mock('vue-i18n', async (importOriginal) => {
@@ -82,7 +81,7 @@ describe('OpsErrorLogTable user/api-key/account columns', () => {
 // errorDetail),界面会显示原始路径字符串而非译文。vitest 的 vue-i18n 为 runtime-only
 // (无消息编译器,t() 对任何键都回退返回 key),故直接校验 locale 对象的命名空间含这些键。
 describe('OpsErrorLogTable i18n keys exist in the errorLog namespace', () => {
-  const locales: Record<string, any> = { zh: zhLocale, en: enLocale }
+  const locales: Record<string, any> = { zh: zhLocale }
   for (const [name, msgs] of Object.entries(locales)) {
     it(`has apiKey & keyDeletedBadge for ${name}`, () => {
       const errorLog = msgs?.admin?.ops?.errorLog

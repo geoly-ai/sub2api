@@ -5,7 +5,7 @@
 
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios'
 import type { ApiResponse } from '@/types'
-import { getLocale } from '@/i18n'
+import { INTL_LOCALE } from '@/i18n'
 import { getAPIBaseURL } from './url'
 export { buildApiUrl, buildGatewayUrl } from './url'
 
@@ -63,7 +63,7 @@ apiClient.interceptors.request.use(
 
     // Attach locale for backend translations
     if (config.headers) {
-      config.headers['Accept-Language'] = getLocale()
+      config.headers['Accept-Language'] = INTL_LOCALE
     }
 
     // Attach timezone for all GET requests (backend may use it for default date ranges)

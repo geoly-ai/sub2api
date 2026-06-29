@@ -575,6 +575,18 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/admin/mcp',
+    name: 'AdminMCP',
+    component: () => import('@/views/admin/McpView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'MCP 配置',
+      titleKey: 'admin.mcp.title',
+      descriptionKey: 'admin.mcp.description'
+    }
+  },
+  {
     path: '/admin/affiliates',
     redirect: '/admin/affiliates/invites'
   },
