@@ -258,6 +258,13 @@ docker-compose \
 This path runs the root `Dockerfile`, which builds the Vue frontend and embeds
 the generated files into the Go binary with `-tags embed`.
 
+If your platform only accepts one Compose file, use the single-file Dokploy
+variant instead:
+
+```bash
+docker-compose -f deploy/docker-compose.standalone.dokploy.yml up -d --build
+```
+
 To keep using the prebuilt image, pull before restarting so Docker does not keep
 running a stale local `latest` image:
 
