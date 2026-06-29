@@ -8,6 +8,8 @@
 #   - Compose file: deploy/docker-compose.standalone.dokploy.yml
 #   - Keep the existing DATABASE_*, REDIS_*, JWT_*, TOTP_*, and DOKPLOY_NETWORK
 #     environment variables.
+#   - Uses Dockerfile.standalone, which omits PostgreSQL client tools because
+#     this deployment expects external PostgreSQL/Redis services.
 #   - If Dokploy evaluates build.context from the repository root instead of
 #     this file's directory, set SUB2API_BUILD_CONTEXT=.
 # =============================================================================
@@ -17,7 +19,7 @@ services:
     image: ${SUB2API_IMAGE:-sub2api:local}
     build:
       context: ${SUB2API_BUILD_CONTEXT:-..}
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.standalone
       args:
         GOPROXY: ${GOPROXY:-https://goproxy.cn,direct}
         GOSUMDB: ${GOSUMDB:-sum.golang.google.cn}

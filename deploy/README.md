@@ -265,6 +265,11 @@ variant instead:
 docker-compose -f deploy/docker-compose.standalone.dokploy.yml up -d --build
 ```
 
+The Dokploy single-file variant uses `Dockerfile.standalone`, which omits
+`postgres:18-alpine`, `pg_dump`, and `psql`. Use the regular root `Dockerfile`
+instead if you need the app's built-in database backup/restore tools inside the
+container.
+
 To keep using the prebuilt image, pull before restarting so Docker does not keep
 running a stale local `latest` image:
 
