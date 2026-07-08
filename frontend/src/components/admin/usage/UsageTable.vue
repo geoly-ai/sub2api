@@ -12,9 +12,12 @@
       >
         <template #cell-user="{ row }">
           <div class="text-sm">
+            <div v-if="row.user?.username" class="font-medium text-gray-900 dark:text-white">
+              {{ row.user.username }}
+            </div>
             <button
               v-if="row.user?.email"
-              class="font-medium text-primary-600 underline decoration-dashed underline-offset-2 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+              class="text-primary-600 underline decoration-dashed underline-offset-2 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
               @click="$emit('userClick', row.user_id, row.user?.email)"
               :title="t('admin.usage.clickToViewBalance')"
             >
