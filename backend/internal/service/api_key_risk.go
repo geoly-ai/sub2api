@@ -114,7 +114,7 @@ func NewAPIKeyRiskService(repo APIKeyRiskRepository, apiKeyRepo APIKeyRiskAPIKey
 		apiKeyRepo:      apiKeyRepo,
 		messageService:  messageService,
 		authInvalidator: authInvalidator,
-		interval:        time.Minute,
+		interval:        10 * time.Minute,
 		stopCh:          make(chan struct{}),
 		doneCh:          make(chan struct{}),
 	}
