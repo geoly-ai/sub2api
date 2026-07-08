@@ -14,7 +14,13 @@ describe('McpView', () => {
   })
 
   it('renders endpoint and copyable generic HTTP configs', async () => {
-    const wrapper = mount(McpView)
+    const wrapper = mount(McpView, {
+      global: {
+        stubs: {
+          AppLayout: { template: '<div><slot /></div>' }
+        }
+      }
+    })
 
     expect(wrapper.text()).toContain('管理员 MCP')
     expect(wrapper.text()).toContain('http://localhost:3000/api/v1/admin/mcp')

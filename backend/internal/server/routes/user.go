@@ -100,6 +100,12 @@ func RegisterUserRoutes(
 			announcements.POST("/:id/read", h.Announcement.MarkRead)
 		}
 
+		messages := authenticated.Group("/user/messages")
+		{
+			messages.GET("", h.UserMessage.List)
+			messages.POST("/:id/read", h.UserMessage.MarkRead)
+		}
+
 		// 卡密兑换
 		redeem := authenticated.Group("/redeem")
 		{

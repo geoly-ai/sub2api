@@ -123,6 +123,11 @@
                   {{ t('nav.apiKeys') }}
                 </router-link>
 
+                <router-link to="/messages" @click="closeDropdown" class="dropdown-item">
+                  <Icon name="inbox" size="sm" />
+                  站内信
+                </router-link>
+
                 <a
                   v-if="authStore.isAdmin"
                   href="https://github.com/Wei-Shaw/sub2api"

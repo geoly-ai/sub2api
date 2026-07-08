@@ -21,6 +21,18 @@ func (f APIKeyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.APIKeyMutation", m)
 }
 
+// The APIKeyRiskEventFunc type is an adapter to allow the use of ordinary
+// function as APIKeyRiskEvent mutator.
+type APIKeyRiskEventFunc func(context.Context, *ent.APIKeyRiskEventMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f APIKeyRiskEventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.APIKeyRiskEventMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.APIKeyRiskEventMutation", m)
+}
+
 // The AccountFunc type is an adapter to allow the use of ordinary
 // function as Account mutator.
 type AccountFunc func(context.Context, *ent.AccountMutation) (ent.Value, error)
@@ -403,6 +415,18 @@ func (f UserAttributeValueFunc) Mutate(ctx context.Context, m ent.Mutation) (ent
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserAttributeValueMutation", m)
+}
+
+// The UserMessageFunc type is an adapter to allow the use of ordinary
+// function as UserMessage mutator.
+type UserMessageFunc func(context.Context, *ent.UserMessageMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserMessageFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserMessageMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMessageMutation", m)
 }
 
 // The UserPlatformQuotaFunc type is an adapter to allow the use of ordinary

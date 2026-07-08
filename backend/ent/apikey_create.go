@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
+	"github.com/Wei-Shaw/sub2api/ent/apikeyriskevent"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
@@ -109,6 +110,34 @@ func (_c *APIKeyCreate) SetStatus(v string) *APIKeyCreate {
 func (_c *APIKeyCreate) SetNillableStatus(v *string) *APIKeyCreate {
 	if v != nil {
 		_c.SetStatus(*v)
+	}
+	return _c
+}
+
+// SetRiskBlockedReason sets the "risk_blocked_reason" field.
+func (_c *APIKeyCreate) SetRiskBlockedReason(v string) *APIKeyCreate {
+	_c.mutation.SetRiskBlockedReason(v)
+	return _c
+}
+
+// SetNillableRiskBlockedReason sets the "risk_blocked_reason" field if the given value is not nil.
+func (_c *APIKeyCreate) SetNillableRiskBlockedReason(v *string) *APIKeyCreate {
+	if v != nil {
+		_c.SetRiskBlockedReason(*v)
+	}
+	return _c
+}
+
+// SetRiskBlockedAt sets the "risk_blocked_at" field.
+func (_c *APIKeyCreate) SetRiskBlockedAt(v time.Time) *APIKeyCreate {
+	_c.mutation.SetRiskBlockedAt(v)
+	return _c
+}
+
+// SetNillableRiskBlockedAt sets the "risk_blocked_at" field if the given value is not nil.
+func (_c *APIKeyCreate) SetNillableRiskBlockedAt(v *time.Time) *APIKeyCreate {
+	if v != nil {
+		_c.SetRiskBlockedAt(*v)
 	}
 	return _c
 }
@@ -332,6 +361,21 @@ func (_c *APIKeyCreate) AddUsageLogs(v ...*UsageLog) *APIKeyCreate {
 	return _c.AddUsageLogIDs(ids...)
 }
 
+// AddRiskEventIDs adds the "risk_events" edge to the APIKeyRiskEvent entity by IDs.
+func (_c *APIKeyCreate) AddRiskEventIDs(ids ...int64) *APIKeyCreate {
+	_c.mutation.AddRiskEventIDs(ids...)
+	return _c
+}
+
+// AddRiskEvents adds the "risk_events" edges to the APIKeyRiskEvent entity.
+func (_c *APIKeyCreate) AddRiskEvents(v ...*APIKeyRiskEvent) *APIKeyCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddRiskEventIDs(ids...)
+}
+
 // Mutation returns the APIKeyMutation object of the builder.
 func (_c *APIKeyCreate) Mutation() *APIKeyMutation {
 	return _c.mutation
@@ -535,6 +579,14 @@ func (_c *APIKeyCreate) createSpec() (*APIKey, *sqlgraph.CreateSpec) {
 		_spec.SetField(apikey.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
+	if value, ok := _c.mutation.RiskBlockedReason(); ok {
+		_spec.SetField(apikey.FieldRiskBlockedReason, field.TypeString, value)
+		_node.RiskBlockedReason = &value
+	}
+	if value, ok := _c.mutation.RiskBlockedAt(); ok {
+		_spec.SetField(apikey.FieldRiskBlockedAt, field.TypeTime, value)
+		_node.RiskBlockedAt = &value
+	}
 	if value, ok := _c.mutation.LastUsedAt(); ok {
 		_spec.SetField(apikey.FieldLastUsedAt, field.TypeTime, value)
 		_node.LastUsedAt = &value
@@ -638,6 +690,22 @@ func (_c *APIKeyCreate) createSpec() (*APIKey, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usagelog.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.RiskEventsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   apikey.RiskEventsTable,
+			Columns: []string{apikey.RiskEventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(apikeyriskevent.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -790,6 +858,42 @@ func (u *APIKeyUpsert) SetStatus(v string) *APIKeyUpsert {
 // UpdateStatus sets the "status" field to the value that was provided on create.
 func (u *APIKeyUpsert) UpdateStatus() *APIKeyUpsert {
 	u.SetExcluded(apikey.FieldStatus)
+	return u
+}
+
+// SetRiskBlockedReason sets the "risk_blocked_reason" field.
+func (u *APIKeyUpsert) SetRiskBlockedReason(v string) *APIKeyUpsert {
+	u.Set(apikey.FieldRiskBlockedReason, v)
+	return u
+}
+
+// UpdateRiskBlockedReason sets the "risk_blocked_reason" field to the value that was provided on create.
+func (u *APIKeyUpsert) UpdateRiskBlockedReason() *APIKeyUpsert {
+	u.SetExcluded(apikey.FieldRiskBlockedReason)
+	return u
+}
+
+// ClearRiskBlockedReason clears the value of the "risk_blocked_reason" field.
+func (u *APIKeyUpsert) ClearRiskBlockedReason() *APIKeyUpsert {
+	u.SetNull(apikey.FieldRiskBlockedReason)
+	return u
+}
+
+// SetRiskBlockedAt sets the "risk_blocked_at" field.
+func (u *APIKeyUpsert) SetRiskBlockedAt(v time.Time) *APIKeyUpsert {
+	u.Set(apikey.FieldRiskBlockedAt, v)
+	return u
+}
+
+// UpdateRiskBlockedAt sets the "risk_blocked_at" field to the value that was provided on create.
+func (u *APIKeyUpsert) UpdateRiskBlockedAt() *APIKeyUpsert {
+	u.SetExcluded(apikey.FieldRiskBlockedAt)
+	return u
+}
+
+// ClearRiskBlockedAt clears the value of the "risk_blocked_at" field.
+func (u *APIKeyUpsert) ClearRiskBlockedAt() *APIKeyUpsert {
+	u.SetNull(apikey.FieldRiskBlockedAt)
 	return u
 }
 
@@ -1217,6 +1321,48 @@ func (u *APIKeyUpsertOne) SetStatus(v string) *APIKeyUpsertOne {
 func (u *APIKeyUpsertOne) UpdateStatus() *APIKeyUpsertOne {
 	return u.Update(func(s *APIKeyUpsert) {
 		s.UpdateStatus()
+	})
+}
+
+// SetRiskBlockedReason sets the "risk_blocked_reason" field.
+func (u *APIKeyUpsertOne) SetRiskBlockedReason(v string) *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetRiskBlockedReason(v)
+	})
+}
+
+// UpdateRiskBlockedReason sets the "risk_blocked_reason" field to the value that was provided on create.
+func (u *APIKeyUpsertOne) UpdateRiskBlockedReason() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateRiskBlockedReason()
+	})
+}
+
+// ClearRiskBlockedReason clears the value of the "risk_blocked_reason" field.
+func (u *APIKeyUpsertOne) ClearRiskBlockedReason() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearRiskBlockedReason()
+	})
+}
+
+// SetRiskBlockedAt sets the "risk_blocked_at" field.
+func (u *APIKeyUpsertOne) SetRiskBlockedAt(v time.Time) *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetRiskBlockedAt(v)
+	})
+}
+
+// UpdateRiskBlockedAt sets the "risk_blocked_at" field to the value that was provided on create.
+func (u *APIKeyUpsertOne) UpdateRiskBlockedAt() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateRiskBlockedAt()
+	})
+}
+
+// ClearRiskBlockedAt clears the value of the "risk_blocked_at" field.
+func (u *APIKeyUpsertOne) ClearRiskBlockedAt() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearRiskBlockedAt()
 	})
 }
 
@@ -1855,6 +2001,48 @@ func (u *APIKeyUpsertBulk) SetStatus(v string) *APIKeyUpsertBulk {
 func (u *APIKeyUpsertBulk) UpdateStatus() *APIKeyUpsertBulk {
 	return u.Update(func(s *APIKeyUpsert) {
 		s.UpdateStatus()
+	})
+}
+
+// SetRiskBlockedReason sets the "risk_blocked_reason" field.
+func (u *APIKeyUpsertBulk) SetRiskBlockedReason(v string) *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetRiskBlockedReason(v)
+	})
+}
+
+// UpdateRiskBlockedReason sets the "risk_blocked_reason" field to the value that was provided on create.
+func (u *APIKeyUpsertBulk) UpdateRiskBlockedReason() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateRiskBlockedReason()
+	})
+}
+
+// ClearRiskBlockedReason clears the value of the "risk_blocked_reason" field.
+func (u *APIKeyUpsertBulk) ClearRiskBlockedReason() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearRiskBlockedReason()
+	})
+}
+
+// SetRiskBlockedAt sets the "risk_blocked_at" field.
+func (u *APIKeyUpsertBulk) SetRiskBlockedAt(v time.Time) *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetRiskBlockedAt(v)
+	})
+}
+
+// UpdateRiskBlockedAt sets the "risk_blocked_at" field to the value that was provided on create.
+func (u *APIKeyUpsertBulk) UpdateRiskBlockedAt() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateRiskBlockedAt()
+	})
+}
+
+// ClearRiskBlockedAt clears the value of the "risk_blocked_at" field.
+func (u *APIKeyUpsertBulk) ClearRiskBlockedAt() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearRiskBlockedAt()
 	})
 }
 

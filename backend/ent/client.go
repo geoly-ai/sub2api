@@ -20,6 +20,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/announcement"
 	"github.com/Wei-Shaw/sub2api/ent/announcementread"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
+	"github.com/Wei-Shaw/sub2api/ent/apikeyriskevent"
 	"github.com/Wei-Shaw/sub2api/ent/authidentity"
 	"github.com/Wei-Shaw/sub2api/ent/authidentitychannel"
 	"github.com/Wei-Shaw/sub2api/ent/channelmonitor"
@@ -48,6 +49,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/userallowedgroup"
 	"github.com/Wei-Shaw/sub2api/ent/userattributedefinition"
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
+	"github.com/Wei-Shaw/sub2api/ent/usermessage"
 	"github.com/Wei-Shaw/sub2api/ent/userplatformquota"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
 
@@ -61,6 +63,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// APIKey is the client for interacting with the APIKey builders.
 	APIKey *APIKeyClient
+	// APIKeyRiskEvent is the client for interacting with the APIKeyRiskEvent builders.
+	APIKeyRiskEvent *APIKeyRiskEventClient
 	// Account is the client for interacting with the Account builders.
 	Account *AccountClient
 	// AccountGroup is the client for interacting with the AccountGroup builders.
@@ -125,6 +129,8 @@ type Client struct {
 	UserAttributeDefinition *UserAttributeDefinitionClient
 	// UserAttributeValue is the client for interacting with the UserAttributeValue builders.
 	UserAttributeValue *UserAttributeValueClient
+	// UserMessage is the client for interacting with the UserMessage builders.
+	UserMessage *UserMessageClient
 	// UserPlatformQuota is the client for interacting with the UserPlatformQuota builders.
 	UserPlatformQuota *UserPlatformQuotaClient
 	// UserSubscription is the client for interacting with the UserSubscription builders.
@@ -141,6 +147,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.APIKey = NewAPIKeyClient(c.config)
+	c.APIKeyRiskEvent = NewAPIKeyRiskEventClient(c.config)
 	c.Account = NewAccountClient(c.config)
 	c.AccountGroup = NewAccountGroupClient(c.config)
 	c.Announcement = NewAnnouncementClient(c.config)
@@ -173,6 +180,7 @@ func (c *Client) init() {
 	c.UserAllowedGroup = NewUserAllowedGroupClient(c.config)
 	c.UserAttributeDefinition = NewUserAttributeDefinitionClient(c.config)
 	c.UserAttributeValue = NewUserAttributeValueClient(c.config)
+	c.UserMessage = NewUserMessageClient(c.config)
 	c.UserPlatformQuota = NewUserPlatformQuotaClient(c.config)
 	c.UserSubscription = NewUserSubscriptionClient(c.config)
 }
@@ -268,6 +276,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:                           ctx,
 		config:                        cfg,
 		APIKey:                        NewAPIKeyClient(cfg),
+		APIKeyRiskEvent:               NewAPIKeyRiskEventClient(cfg),
 		Account:                       NewAccountClient(cfg),
 		AccountGroup:                  NewAccountGroupClient(cfg),
 		Announcement:                  NewAnnouncementClient(cfg),
@@ -300,6 +309,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		UserAllowedGroup:              NewUserAllowedGroupClient(cfg),
 		UserAttributeDefinition:       NewUserAttributeDefinitionClient(cfg),
 		UserAttributeValue:            NewUserAttributeValueClient(cfg),
+		UserMessage:                   NewUserMessageClient(cfg),
 		UserPlatformQuota:             NewUserPlatformQuotaClient(cfg),
 		UserSubscription:              NewUserSubscriptionClient(cfg),
 	}, nil
@@ -322,6 +332,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:                           ctx,
 		config:                        cfg,
 		APIKey:                        NewAPIKeyClient(cfg),
+		APIKeyRiskEvent:               NewAPIKeyRiskEventClient(cfg),
 		Account:                       NewAccountClient(cfg),
 		AccountGroup:                  NewAccountGroupClient(cfg),
 		Announcement:                  NewAnnouncementClient(cfg),
@@ -354,6 +365,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		UserAllowedGroup:              NewUserAllowedGroupClient(cfg),
 		UserAttributeDefinition:       NewUserAttributeDefinitionClient(cfg),
 		UserAttributeValue:            NewUserAttributeValueClient(cfg),
+		UserMessage:                   NewUserMessageClient(cfg),
 		UserPlatformQuota:             NewUserPlatformQuotaClient(cfg),
 		UserSubscription:              NewUserSubscriptionClient(cfg),
 	}, nil
@@ -385,8 +397,8 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.APIKey, c.Account, c.AccountGroup, c.Announcement, c.AnnouncementRead,
-		c.AuthIdentity, c.AuthIdentityChannel, c.ChannelMonitor,
+		c.APIKey, c.APIKeyRiskEvent, c.Account, c.AccountGroup, c.Announcement,
+		c.AnnouncementRead, c.AuthIdentity, c.AuthIdentityChannel, c.ChannelMonitor,
 		c.ChannelMonitorDailyRollup, c.ChannelMonitorHistory,
 		c.ChannelMonitorRequestTemplate, c.ErrorPassthroughRule, c.Group,
 		c.IdempotencyRecord, c.IdentityAdoptionDecision, c.PaymentAuditLog,
@@ -394,7 +406,7 @@ func (c *Client) Use(hooks ...Hook) {
 		c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.SecuritySecret, c.Setting,
 		c.SubscriptionPlan, c.TLSFingerprintProfile, c.UsageCleanupTask, c.UsageLog,
 		c.User, c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
-		c.UserPlatformQuota, c.UserSubscription,
+		c.UserMessage, c.UserPlatformQuota, c.UserSubscription,
 	} {
 		n.Use(hooks...)
 	}
@@ -404,8 +416,8 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.APIKey, c.Account, c.AccountGroup, c.Announcement, c.AnnouncementRead,
-		c.AuthIdentity, c.AuthIdentityChannel, c.ChannelMonitor,
+		c.APIKey, c.APIKeyRiskEvent, c.Account, c.AccountGroup, c.Announcement,
+		c.AnnouncementRead, c.AuthIdentity, c.AuthIdentityChannel, c.ChannelMonitor,
 		c.ChannelMonitorDailyRollup, c.ChannelMonitorHistory,
 		c.ChannelMonitorRequestTemplate, c.ErrorPassthroughRule, c.Group,
 		c.IdempotencyRecord, c.IdentityAdoptionDecision, c.PaymentAuditLog,
@@ -413,7 +425,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.SecuritySecret, c.Setting,
 		c.SubscriptionPlan, c.TLSFingerprintProfile, c.UsageCleanupTask, c.UsageLog,
 		c.User, c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
-		c.UserPlatformQuota, c.UserSubscription,
+		c.UserMessage, c.UserPlatformQuota, c.UserSubscription,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -424,6 +436,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *APIKeyMutation:
 		return c.APIKey.mutate(ctx, m)
+	case *APIKeyRiskEventMutation:
+		return c.APIKeyRiskEvent.mutate(ctx, m)
 	case *AccountMutation:
 		return c.Account.mutate(ctx, m)
 	case *AccountGroupMutation:
@@ -488,6 +502,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.UserAttributeDefinition.mutate(ctx, m)
 	case *UserAttributeValueMutation:
 		return c.UserAttributeValue.mutate(ctx, m)
+	case *UserMessageMutation:
+		return c.UserMessage.mutate(ctx, m)
 	case *UserPlatformQuotaMutation:
 		return c.UserPlatformQuota.mutate(ctx, m)
 	case *UserSubscriptionMutation:
@@ -653,6 +669,22 @@ func (c *APIKeyClient) QueryUsageLogs(_m *APIKey) *UsageLogQuery {
 	return query
 }
 
+// QueryRiskEvents queries the risk_events edge of a APIKey.
+func (c *APIKeyClient) QueryRiskEvents(_m *APIKey) *APIKeyRiskEventQuery {
+	query := (&APIKeyRiskEventClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(apikey.Table, apikey.FieldID, id),
+			sqlgraph.To(apikeyriskevent.Table, apikeyriskevent.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, apikey.RiskEventsTable, apikey.RiskEventsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *APIKeyClient) Hooks() []Hook {
 	hooks := c.hooks.APIKey
@@ -677,6 +709,171 @@ func (c *APIKeyClient) mutate(ctx context.Context, m *APIKeyMutation) (Value, er
 		return (&APIKeyDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown APIKey mutation op: %q", m.Op())
+	}
+}
+
+// APIKeyRiskEventClient is a client for the APIKeyRiskEvent schema.
+type APIKeyRiskEventClient struct {
+	config
+}
+
+// NewAPIKeyRiskEventClient returns a client for the APIKeyRiskEvent from the given config.
+func NewAPIKeyRiskEventClient(c config) *APIKeyRiskEventClient {
+	return &APIKeyRiskEventClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `apikeyriskevent.Hooks(f(g(h())))`.
+func (c *APIKeyRiskEventClient) Use(hooks ...Hook) {
+	c.hooks.APIKeyRiskEvent = append(c.hooks.APIKeyRiskEvent, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `apikeyriskevent.Intercept(f(g(h())))`.
+func (c *APIKeyRiskEventClient) Intercept(interceptors ...Interceptor) {
+	c.inters.APIKeyRiskEvent = append(c.inters.APIKeyRiskEvent, interceptors...)
+}
+
+// Create returns a builder for creating a APIKeyRiskEvent entity.
+func (c *APIKeyRiskEventClient) Create() *APIKeyRiskEventCreate {
+	mutation := newAPIKeyRiskEventMutation(c.config, OpCreate)
+	return &APIKeyRiskEventCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of APIKeyRiskEvent entities.
+func (c *APIKeyRiskEventClient) CreateBulk(builders ...*APIKeyRiskEventCreate) *APIKeyRiskEventCreateBulk {
+	return &APIKeyRiskEventCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *APIKeyRiskEventClient) MapCreateBulk(slice any, setFunc func(*APIKeyRiskEventCreate, int)) *APIKeyRiskEventCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &APIKeyRiskEventCreateBulk{err: fmt.Errorf("calling to APIKeyRiskEventClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*APIKeyRiskEventCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &APIKeyRiskEventCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for APIKeyRiskEvent.
+func (c *APIKeyRiskEventClient) Update() *APIKeyRiskEventUpdate {
+	mutation := newAPIKeyRiskEventMutation(c.config, OpUpdate)
+	return &APIKeyRiskEventUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *APIKeyRiskEventClient) UpdateOne(_m *APIKeyRiskEvent) *APIKeyRiskEventUpdateOne {
+	mutation := newAPIKeyRiskEventMutation(c.config, OpUpdateOne, withAPIKeyRiskEvent(_m))
+	return &APIKeyRiskEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *APIKeyRiskEventClient) UpdateOneID(id int64) *APIKeyRiskEventUpdateOne {
+	mutation := newAPIKeyRiskEventMutation(c.config, OpUpdateOne, withAPIKeyRiskEventID(id))
+	return &APIKeyRiskEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for APIKeyRiskEvent.
+func (c *APIKeyRiskEventClient) Delete() *APIKeyRiskEventDelete {
+	mutation := newAPIKeyRiskEventMutation(c.config, OpDelete)
+	return &APIKeyRiskEventDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *APIKeyRiskEventClient) DeleteOne(_m *APIKeyRiskEvent) *APIKeyRiskEventDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *APIKeyRiskEventClient) DeleteOneID(id int64) *APIKeyRiskEventDeleteOne {
+	builder := c.Delete().Where(apikeyriskevent.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &APIKeyRiskEventDeleteOne{builder}
+}
+
+// Query returns a query builder for APIKeyRiskEvent.
+func (c *APIKeyRiskEventClient) Query() *APIKeyRiskEventQuery {
+	return &APIKeyRiskEventQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAPIKeyRiskEvent},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a APIKeyRiskEvent entity by its id.
+func (c *APIKeyRiskEventClient) Get(ctx context.Context, id int64) (*APIKeyRiskEvent, error) {
+	return c.Query().Where(apikeyriskevent.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *APIKeyRiskEventClient) GetX(ctx context.Context, id int64) *APIKeyRiskEvent {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a APIKeyRiskEvent.
+func (c *APIKeyRiskEventClient) QueryUser(_m *APIKeyRiskEvent) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(apikeyriskevent.Table, apikeyriskevent.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, apikeyriskevent.UserTable, apikeyriskevent.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAPIKey queries the api_key edge of a APIKeyRiskEvent.
+func (c *APIKeyRiskEventClient) QueryAPIKey(_m *APIKeyRiskEvent) *APIKeyQuery {
+	query := (&APIKeyClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(apikeyriskevent.Table, apikeyriskevent.FieldID, id),
+			sqlgraph.To(apikey.Table, apikey.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, apikeyriskevent.APIKeyTable, apikeyriskevent.APIKeyColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *APIKeyRiskEventClient) Hooks() []Hook {
+	return c.hooks.APIKeyRiskEvent
+}
+
+// Interceptors returns the client interceptors.
+func (c *APIKeyRiskEventClient) Interceptors() []Interceptor {
+	return c.inters.APIKeyRiskEvent
+}
+
+func (c *APIKeyRiskEventClient) mutate(ctx context.Context, m *APIKeyRiskEventMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&APIKeyRiskEventCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&APIKeyRiskEventUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&APIKeyRiskEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&APIKeyRiskEventDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown APIKeyRiskEvent mutation op: %q", m.Op())
 	}
 }
 
@@ -5253,6 +5450,38 @@ func (c *UserClient) QueryAnnouncementReads(_m *User) *AnnouncementReadQuery {
 	return query
 }
 
+// QueryMessages queries the messages edge of a User.
+func (c *UserClient) QueryMessages(_m *User) *UserMessageQuery {
+	query := (&UserMessageClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(usermessage.Table, usermessage.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.MessagesTable, user.MessagesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAPIKeyRiskEvents queries the api_key_risk_events edge of a User.
+func (c *UserClient) QueryAPIKeyRiskEvents(_m *User) *APIKeyRiskEventQuery {
+	query := (&APIKeyRiskEventClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(apikeyriskevent.Table, apikeyriskevent.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.APIKeyRiskEventsTable, user.APIKeyRiskEventsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryAllowedGroups queries the allowed_groups edge of a User.
 func (c *UserClient) QueryAllowedGroups(_m *User) *GroupQuery {
 	query := (&GroupClient{config: c.config}).Query()
@@ -5856,6 +6085,155 @@ func (c *UserAttributeValueClient) mutate(ctx context.Context, m *UserAttributeV
 	}
 }
 
+// UserMessageClient is a client for the UserMessage schema.
+type UserMessageClient struct {
+	config
+}
+
+// NewUserMessageClient returns a client for the UserMessage from the given config.
+func NewUserMessageClient(c config) *UserMessageClient {
+	return &UserMessageClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `usermessage.Hooks(f(g(h())))`.
+func (c *UserMessageClient) Use(hooks ...Hook) {
+	c.hooks.UserMessage = append(c.hooks.UserMessage, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `usermessage.Intercept(f(g(h())))`.
+func (c *UserMessageClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserMessage = append(c.inters.UserMessage, interceptors...)
+}
+
+// Create returns a builder for creating a UserMessage entity.
+func (c *UserMessageClient) Create() *UserMessageCreate {
+	mutation := newUserMessageMutation(c.config, OpCreate)
+	return &UserMessageCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserMessage entities.
+func (c *UserMessageClient) CreateBulk(builders ...*UserMessageCreate) *UserMessageCreateBulk {
+	return &UserMessageCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserMessageClient) MapCreateBulk(slice any, setFunc func(*UserMessageCreate, int)) *UserMessageCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserMessageCreateBulk{err: fmt.Errorf("calling to UserMessageClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserMessageCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserMessageCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserMessage.
+func (c *UserMessageClient) Update() *UserMessageUpdate {
+	mutation := newUserMessageMutation(c.config, OpUpdate)
+	return &UserMessageUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserMessageClient) UpdateOne(_m *UserMessage) *UserMessageUpdateOne {
+	mutation := newUserMessageMutation(c.config, OpUpdateOne, withUserMessage(_m))
+	return &UserMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserMessageClient) UpdateOneID(id int64) *UserMessageUpdateOne {
+	mutation := newUserMessageMutation(c.config, OpUpdateOne, withUserMessageID(id))
+	return &UserMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserMessage.
+func (c *UserMessageClient) Delete() *UserMessageDelete {
+	mutation := newUserMessageMutation(c.config, OpDelete)
+	return &UserMessageDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserMessageClient) DeleteOne(_m *UserMessage) *UserMessageDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserMessageClient) DeleteOneID(id int64) *UserMessageDeleteOne {
+	builder := c.Delete().Where(usermessage.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserMessageDeleteOne{builder}
+}
+
+// Query returns a query builder for UserMessage.
+func (c *UserMessageClient) Query() *UserMessageQuery {
+	return &UserMessageQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserMessage},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserMessage entity by its id.
+func (c *UserMessageClient) Get(ctx context.Context, id int64) (*UserMessage, error) {
+	return c.Query().Where(usermessage.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserMessageClient) GetX(ctx context.Context, id int64) *UserMessage {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a UserMessage.
+func (c *UserMessageClient) QueryUser(_m *UserMessage) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usermessage.Table, usermessage.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, usermessage.UserTable, usermessage.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserMessageClient) Hooks() []Hook {
+	return c.hooks.UserMessage
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserMessageClient) Interceptors() []Interceptor {
+	return c.inters.UserMessage
+}
+
+func (c *UserMessageClient) mutate(ctx context.Context, m *UserMessageMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserMessageCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserMessageUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserMessageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserMessage mutation op: %q", m.Op())
+	}
+}
+
 // UserPlatformQuotaClient is a client for the UserPlatformQuota schema.
 type UserPlatformQuotaClient struct {
 	config
@@ -6209,25 +6587,25 @@ func (c *UserSubscriptionClient) mutate(ctx context.Context, m *UserSubscription
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		APIKey, Account, AccountGroup, Announcement, AnnouncementRead, AuthIdentity,
-		AuthIdentityChannel, ChannelMonitor, ChannelMonitorDailyRollup,
+		APIKey, APIKeyRiskEvent, Account, AccountGroup, Announcement, AnnouncementRead,
+		AuthIdentity, AuthIdentityChannel, ChannelMonitor, ChannelMonitorDailyRollup,
 		ChannelMonitorHistory, ChannelMonitorRequestTemplate, ErrorPassthroughRule,
 		Group, IdempotencyRecord, IdentityAdoptionDecision, PaymentAuditLog,
 		PaymentOrder, PaymentProviderInstance, PendingAuthSession, PromoCode,
 		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SubscriptionPlan,
 		TLSFingerprintProfile, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
-		UserAttributeDefinition, UserAttributeValue, UserPlatformQuota,
+		UserAttributeDefinition, UserAttributeValue, UserMessage, UserPlatformQuota,
 		UserSubscription []ent.Hook
 	}
 	inters struct {
-		APIKey, Account, AccountGroup, Announcement, AnnouncementRead, AuthIdentity,
-		AuthIdentityChannel, ChannelMonitor, ChannelMonitorDailyRollup,
+		APIKey, APIKeyRiskEvent, Account, AccountGroup, Announcement, AnnouncementRead,
+		AuthIdentity, AuthIdentityChannel, ChannelMonitor, ChannelMonitorDailyRollup,
 		ChannelMonitorHistory, ChannelMonitorRequestTemplate, ErrorPassthroughRule,
 		Group, IdempotencyRecord, IdentityAdoptionDecision, PaymentAuditLog,
 		PaymentOrder, PaymentProviderInstance, PendingAuthSession, PromoCode,
 		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SubscriptionPlan,
 		TLSFingerprintProfile, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
-		UserAttributeDefinition, UserAttributeValue, UserPlatformQuota,
+		UserAttributeDefinition, UserAttributeValue, UserMessage, UserPlatformQuota,
 		UserSubscription []ent.Interceptor
 	}
 )

@@ -47,6 +47,16 @@ func (APIKey) Fields() []ent.Field {
 		field.String("status").
 			MaxLen(20).
 			Default(domain.StatusActive),
+		field.String("risk_blocked_reason").
+			SchemaType(map[string]string{dialect.Postgres: "text"}).
+			Optional().
+			Nillable().
+			Comment("Reason shown when the key is blocked by API key risk controls"),
+		field.Time("risk_blocked_at").
+			Optional().
+			Nillable().
+			SchemaType(map[string]string{dialect.Postgres: "timestamptz"}).
+			Comment("Time when the key was blocked by API key risk controls"),
 		field.Time("last_used_at").
 			Optional().
 			Nillable().
@@ -130,6 +140,7 @@ func (APIKey) Edges() []ent.Edge {
 			Field("group_id").
 			Unique(),
 		edge.To("usage_logs", UsageLog.Type),
+		edge.To("risk_events", APIKeyRiskEvent.Type),
 	}
 }
 

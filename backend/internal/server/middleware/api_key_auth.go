@@ -86,8 +86,17 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 		// disabled / 未知状态 → 无条件拦截（expired 和 quota_exhausted 留给计费阶段）
 		if !apiKey.IsActive() &&
 			apiKey.Status != service.StatusAPIKeyExpired &&
-			apiKey.Status != service.StatusAPIKeyQuotaExhausted {
+			apiKey.Status != service.StatusAPIKeyQuotaExhausted &&
+			apiKey.Status != service.StatusAPIKeyRiskBlocked {
 			AbortWithError(c, 401, "API_KEY_DISABLED", "API key is disabled")
+			return
+		}
+		if apiKey.Status == service.StatusAPIKeyRiskBlocked {
+			message := "API key 因疑似泄露或异常调用已被封禁，请在控制台更新 key"
+			if apiKey.RiskBlockedReason != nil && strings.TrimSpace(*apiKey.RiskBlockedReason) != "" {
+				message = strings.TrimSpace(*apiKey.RiskBlockedReason)
+			}
+			AbortWithError(c, 403, "API_KEY_RISK_BLOCKED", message)
 			return
 		}
 

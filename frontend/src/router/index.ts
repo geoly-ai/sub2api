@@ -218,6 +218,16 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/messages',
+    name: 'Messages',
+    component: () => import('@/views/user/MessagesView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Messages'
+    }
+  },
+  {
     path: '/redeem',
     name: 'Redeem',
     component: () => import('@/views/user/RedeemView.vue'),

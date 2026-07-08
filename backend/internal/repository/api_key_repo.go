@@ -29,6 +29,10 @@ func NewAPIKeyRepository(client *dbent.Client, sqlDB *sql.DB) service.APIKeyRepo
 	return newAPIKeyRepositoryWithSQL(client, sqlDB)
 }
 
+func NewAPIKeyRiskAPIKeyRepository(client *dbent.Client, sqlDB *sql.DB) service.APIKeyRiskAPIKeyRepository {
+	return newAPIKeyRepositoryWithSQL(client, sqlDB)
+}
+
 func newAPIKeyRepositoryWithSQL(client *dbent.Client, sqlq sqlExecutor) *apiKeyRepository {
 	return &apiKeyRepository{client: client, sql: sqlq}
 }
@@ -132,6 +136,8 @@ func (r *apiKeyRepository) GetByKeyForAuth(ctx context.Context, key string) (*se
 			apikey.FieldGroupID,
 			apikey.FieldName,
 			apikey.FieldStatus,
+			apikey.FieldRiskBlockedReason,
+			apikey.FieldRiskBlockedAt,
 			apikey.FieldIPWhitelist,
 			apikey.FieldIPBlacklist,
 			apikey.FieldQuota,
@@ -693,34 +699,78 @@ func (r *apiKeyRepository) GetRateLimitData(ctx context.Context, id int64) (resu
 	return data, rows.Err()
 }
 
+func (r *apiKeyRepository) BlockForRisk(ctx context.Context, id int64, reason string, blockedAt time.Time) (string, int64, error) {
+	var key string
+	var userID int64
+	query := `
+		UPDATE api_keys
+		SET status = $1,
+		    risk_blocked_reason = $2,
+		    risk_blocked_at = $3,
+		    updated_at = NOW()
+		WHERE id = $4 AND deleted_at IS NULL
+		RETURNING key, user_id
+	`
+	if err := scanSingleRow(ctx, r.sql, query, []any{service.StatusAPIKeyRiskBlocked, reason, blockedAt, id}, &key, &userID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", 0, service.ErrAPIKeyNotFound
+		}
+		return "", 0, err
+	}
+	return key, userID, nil
+}
+
+func (r *apiKeyRepository) UnblockRisk(ctx context.Context, id int64) (string, int64, error) {
+	var key string
+	var userID int64
+	query := `
+		UPDATE api_keys
+		SET status = $1,
+		    risk_blocked_reason = NULL,
+		    risk_blocked_at = NULL,
+		    updated_at = NOW()
+		WHERE id = $2 AND deleted_at IS NULL AND status = $3
+		RETURNING key, user_id
+	`
+	if err := scanSingleRow(ctx, r.sql, query, []any{service.StatusAPIKeyActive, id, service.StatusAPIKeyRiskBlocked}, &key, &userID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", 0, service.ErrAPIKeyNotFound
+		}
+		return "", 0, err
+	}
+	return key, userID, nil
+}
+
 func apiKeyEntityToService(m *dbent.APIKey) *service.APIKey {
 	if m == nil {
 		return nil
 	}
 	out := &service.APIKey{
-		ID:            m.ID,
-		UserID:        m.UserID,
-		Key:           m.Key,
-		Name:          m.Name,
-		Status:        m.Status,
-		IPWhitelist:   m.IPWhitelist,
-		IPBlacklist:   m.IPBlacklist,
-		LastUsedAt:    m.LastUsedAt,
-		CreatedAt:     m.CreatedAt,
-		UpdatedAt:     m.UpdatedAt,
-		GroupID:       m.GroupID,
-		Quota:         m.Quota,
-		QuotaUsed:     m.QuotaUsed,
-		ExpiresAt:     m.ExpiresAt,
-		RateLimit5h:   m.RateLimit5h,
-		RateLimit1d:   m.RateLimit1d,
-		RateLimit7d:   m.RateLimit7d,
-		Usage5h:       m.Usage5h,
-		Usage1d:       m.Usage1d,
-		Usage7d:       m.Usage7d,
-		Window5hStart: m.Window5hStart,
-		Window1dStart: m.Window1dStart,
-		Window7dStart: m.Window7dStart,
+		ID:                m.ID,
+		UserID:            m.UserID,
+		Key:               m.Key,
+		Name:              m.Name,
+		Status:            m.Status,
+		RiskBlockedReason: m.RiskBlockedReason,
+		RiskBlockedAt:     m.RiskBlockedAt,
+		IPWhitelist:       m.IPWhitelist,
+		IPBlacklist:       m.IPBlacklist,
+		LastUsedAt:        m.LastUsedAt,
+		CreatedAt:         m.CreatedAt,
+		UpdatedAt:         m.UpdatedAt,
+		GroupID:           m.GroupID,
+		Quota:             m.Quota,
+		QuotaUsed:         m.QuotaUsed,
+		ExpiresAt:         m.ExpiresAt,
+		RateLimit5h:       m.RateLimit5h,
+		RateLimit1d:       m.RateLimit1d,
+		RateLimit7d:       m.RateLimit7d,
+		Usage5h:           m.Usage5h,
+		Usage1d:           m.Usage1d,
+		Usage7d:           m.Usage7d,
+		Window5hStart:     m.Window5hStart,
+		Window1dStart:     m.Window1dStart,
+		Window7dStart:     m.Window7dStart,
 	}
 	if m.Edges.User != nil {
 		out.User = userEntityToService(m.Edges.User)

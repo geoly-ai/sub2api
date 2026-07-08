@@ -31,6 +31,10 @@ const (
 	FieldGroupID = "group_id"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldRiskBlockedReason holds the string denoting the risk_blocked_reason field in the database.
+	FieldRiskBlockedReason = "risk_blocked_reason"
+	// FieldRiskBlockedAt holds the string denoting the risk_blocked_at field in the database.
+	FieldRiskBlockedAt = "risk_blocked_at"
 	// FieldLastUsedAt holds the string denoting the last_used_at field in the database.
 	FieldLastUsedAt = "last_used_at"
 	// FieldIPWhitelist holds the string denoting the ip_whitelist field in the database.
@@ -67,6 +71,8 @@ const (
 	EdgeGroup = "group"
 	// EdgeUsageLogs holds the string denoting the usage_logs edge name in mutations.
 	EdgeUsageLogs = "usage_logs"
+	// EdgeRiskEvents holds the string denoting the risk_events edge name in mutations.
+	EdgeRiskEvents = "risk_events"
 	// Table holds the table name of the apikey in the database.
 	Table = "api_keys"
 	// UserTable is the table that holds the user relation/edge.
@@ -90,6 +96,13 @@ const (
 	UsageLogsInverseTable = "usage_logs"
 	// UsageLogsColumn is the table column denoting the usage_logs relation/edge.
 	UsageLogsColumn = "api_key_id"
+	// RiskEventsTable is the table that holds the risk_events relation/edge.
+	RiskEventsTable = "api_key_risk_events"
+	// RiskEventsInverseTable is the table name for the APIKeyRiskEvent entity.
+	// It exists in this package in order to avoid circular dependency with the "apikeyriskevent" package.
+	RiskEventsInverseTable = "api_key_risk_events"
+	// RiskEventsColumn is the table column denoting the risk_events relation/edge.
+	RiskEventsColumn = "api_key_id"
 )
 
 // Columns holds all SQL columns for apikey fields.
@@ -103,6 +116,8 @@ var Columns = []string{
 	FieldName,
 	FieldGroupID,
 	FieldStatus,
+	FieldRiskBlockedReason,
+	FieldRiskBlockedAt,
 	FieldLastUsedAt,
 	FieldIPWhitelist,
 	FieldIPBlacklist,
@@ -218,6 +233,16 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }
 
+// ByRiskBlockedReason orders the results by the risk_blocked_reason field.
+func ByRiskBlockedReason(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRiskBlockedReason, opts...).ToFunc()
+}
+
+// ByRiskBlockedAt orders the results by the risk_blocked_at field.
+func ByRiskBlockedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRiskBlockedAt, opts...).ToFunc()
+}
+
 // ByLastUsedAt orders the results by the last_used_at field.
 func ByLastUsedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLastUsedAt, opts...).ToFunc()
@@ -310,6 +335,20 @@ func ByUsageLogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newUsageLogsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByRiskEventsCount orders the results by risk_events count.
+func ByRiskEventsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRiskEventsStep(), opts...)
+	}
+}
+
+// ByRiskEvents orders the results by risk_events terms.
+func ByRiskEvents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRiskEventsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -329,5 +368,12 @@ func newUsageLogsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UsageLogsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, UsageLogsTable, UsageLogsColumn),
+	)
+}
+func newRiskEventsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RiskEventsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RiskEventsTable, RiskEventsColumn),
 	)
 }

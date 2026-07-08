@@ -219,6 +219,46 @@ export interface ContentModerationUnbanUserResponse {
   status: string
 }
 
+export interface APIKeyRiskEvent {
+  id: number
+  user_id: number
+  user_email: string
+  api_key_id: number
+  api_key_name: string
+  rule_code: string
+  severity: string
+  score: number
+  status: string
+  evidence: Record<string, unknown>
+  time_bucket: string
+  blocked_at?: string | null
+  resolved_at?: string | null
+  resolved_by?: number | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ListAPIKeyRiskEventsParams {
+  page?: number
+  page_size?: number
+  user_id?: number
+  api_key_id?: number
+  rule_code?: string
+  severity?: string
+  status?: string
+  search?: string
+  from?: string
+  to?: string
+}
+
+export interface APIKeyRiskEventsResponse {
+  items: APIKeyRiskEvent[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
+}
+
 export interface DeleteFlaggedHashResponse {
   input_hash: string
   deleted: boolean
@@ -280,6 +320,25 @@ export async function clearFlaggedHashes(): Promise<ClearFlaggedHashesResponse> 
   return data
 }
 
+export async function listAPIKeyRiskEvents(
+  params: ListAPIKeyRiskEventsParams = {}
+): Promise<APIKeyRiskEventsResponse> {
+  const { data } = await apiClient.get<APIKeyRiskEventsResponse>('/admin/risk-control/api-key-events', {
+    params,
+  })
+  return data
+}
+
+export async function resolveAPIKeyRiskEvent(id: number): Promise<{ message: string }> {
+  const { data } = await apiClient.post<{ message: string }>(`/admin/risk-control/api-key-events/${id}/resolve`)
+  return data
+}
+
+export async function unblockAPIKeyRisk(apiKeyID: number): Promise<{ message: string }> {
+  const { data } = await apiClient.post<{ message: string }>(`/admin/api-keys/${apiKeyID}/unblock-risk`)
+  return data
+}
+
 export const riskControlAPI = {
   getConfig,
   updateConfig,
@@ -289,6 +348,9 @@ export const riskControlAPI = {
   unbanUser,
   deleteFlaggedHash,
   clearFlaggedHashes,
+  listAPIKeyRiskEvents,
+  resolveAPIKeyRiskEvent,
+  unblockAPIKeyRisk,
 }
 
 export default riskControlAPI

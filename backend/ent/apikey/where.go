@@ -95,6 +95,16 @@ func Status(v string) predicate.APIKey {
 	return predicate.APIKey(sql.FieldEQ(FieldStatus, v))
 }
 
+// RiskBlockedReason applies equality check predicate on the "risk_blocked_reason" field. It's identical to RiskBlockedReasonEQ.
+func RiskBlockedReason(v string) predicate.APIKey {
+	return predicate.APIKey(sql.FieldEQ(FieldRiskBlockedReason, v))
+}
+
+// RiskBlockedAt applies equality check predicate on the "risk_blocked_at" field. It's identical to RiskBlockedAtEQ.
+func RiskBlockedAt(v time.Time) predicate.APIKey {
+	return predicate.APIKey(sql.FieldEQ(FieldRiskBlockedAt, v))
+}
+
 // LastUsedAt applies equality check predicate on the "last_used_at" field. It's identical to LastUsedAtEQ.
 func LastUsedAt(v time.Time) predicate.APIKey {
 	return predicate.APIKey(sql.FieldEQ(FieldLastUsedAt, v))
@@ -533,6 +543,131 @@ func StatusEqualFold(v string) predicate.APIKey {
 // StatusContainsFold applies the ContainsFold predicate on the "status" field.
 func StatusContainsFold(v string) predicate.APIKey {
 	return predicate.APIKey(sql.FieldContainsFold(FieldStatus, v))
+}
+
+// RiskBlockedReasonEQ applies the EQ predicate on the "risk_blocked_reason" field.
+func RiskBlockedReasonEQ(v string) predicate.APIKey {
+	return predicate.APIKey(sql.FieldEQ(FieldRiskBlockedReason, v))
+}
+
+// RiskBlockedReasonNEQ applies the NEQ predicate on the "risk_blocked_reason" field.
+func RiskBlockedReasonNEQ(v string) predicate.APIKey {
+	return predicate.APIKey(sql.FieldNEQ(FieldRiskBlockedReason, v))
+}
+
+// RiskBlockedReasonIn applies the In predicate on the "risk_blocked_reason" field.
+func RiskBlockedReasonIn(vs ...string) predicate.APIKey {
+	return predicate.APIKey(sql.FieldIn(FieldRiskBlockedReason, vs...))
+}
+
+// RiskBlockedReasonNotIn applies the NotIn predicate on the "risk_blocked_reason" field.
+func RiskBlockedReasonNotIn(vs ...string) predicate.APIKey {
+	return predicate.APIKey(sql.FieldNotIn(FieldRiskBlockedReason, vs...))
+}
+
+// RiskBlockedReasonGT applies the GT predicate on the "risk_blocked_reason" field.
+func RiskBlockedReasonGT(v string) predicate.APIKey {
+	return predicate.APIKey(sql.FieldGT(FieldRiskBlockedReason, v))
+}
+
+// RiskBlockedReasonGTE applies the GTE predicate on the "risk_blocked_reason" field.
+func RiskBlockedReasonGTE(v string) predicate.APIKey {
+	return predicate.APIKey(sql.FieldGTE(FieldRiskBlockedReason, v))
+}
+
+// RiskBlockedReasonLT applies the LT predicate on the "risk_blocked_reason" field.
+func RiskBlockedReasonLT(v string) predicate.APIKey {
+	return predicate.APIKey(sql.FieldLT(FieldRiskBlockedReason, v))
+}
+
+// RiskBlockedReasonLTE applies the LTE predicate on the "risk_blocked_reason" field.
+func RiskBlockedReasonLTE(v string) predicate.APIKey {
+	return predicate.APIKey(sql.FieldLTE(FieldRiskBlockedReason, v))
+}
+
+// RiskBlockedReasonContains applies the Contains predicate on the "risk_blocked_reason" field.
+func RiskBlockedReasonContains(v string) predicate.APIKey {
+	return predicate.APIKey(sql.FieldContains(FieldRiskBlockedReason, v))
+}
+
+// RiskBlockedReasonHasPrefix applies the HasPrefix predicate on the "risk_blocked_reason" field.
+func RiskBlockedReasonHasPrefix(v string) predicate.APIKey {
+	return predicate.APIKey(sql.FieldHasPrefix(FieldRiskBlockedReason, v))
+}
+
+// RiskBlockedReasonHasSuffix applies the HasSuffix predicate on the "risk_blocked_reason" field.
+func RiskBlockedReasonHasSuffix(v string) predicate.APIKey {
+	return predicate.APIKey(sql.FieldHasSuffix(FieldRiskBlockedReason, v))
+}
+
+// RiskBlockedReasonIsNil applies the IsNil predicate on the "risk_blocked_reason" field.
+func RiskBlockedReasonIsNil() predicate.APIKey {
+	return predicate.APIKey(sql.FieldIsNull(FieldRiskBlockedReason))
+}
+
+// RiskBlockedReasonNotNil applies the NotNil predicate on the "risk_blocked_reason" field.
+func RiskBlockedReasonNotNil() predicate.APIKey {
+	return predicate.APIKey(sql.FieldNotNull(FieldRiskBlockedReason))
+}
+
+// RiskBlockedReasonEqualFold applies the EqualFold predicate on the "risk_blocked_reason" field.
+func RiskBlockedReasonEqualFold(v string) predicate.APIKey {
+	return predicate.APIKey(sql.FieldEqualFold(FieldRiskBlockedReason, v))
+}
+
+// RiskBlockedReasonContainsFold applies the ContainsFold predicate on the "risk_blocked_reason" field.
+func RiskBlockedReasonContainsFold(v string) predicate.APIKey {
+	return predicate.APIKey(sql.FieldContainsFold(FieldRiskBlockedReason, v))
+}
+
+// RiskBlockedAtEQ applies the EQ predicate on the "risk_blocked_at" field.
+func RiskBlockedAtEQ(v time.Time) predicate.APIKey {
+	return predicate.APIKey(sql.FieldEQ(FieldRiskBlockedAt, v))
+}
+
+// RiskBlockedAtNEQ applies the NEQ predicate on the "risk_blocked_at" field.
+func RiskBlockedAtNEQ(v time.Time) predicate.APIKey {
+	return predicate.APIKey(sql.FieldNEQ(FieldRiskBlockedAt, v))
+}
+
+// RiskBlockedAtIn applies the In predicate on the "risk_blocked_at" field.
+func RiskBlockedAtIn(vs ...time.Time) predicate.APIKey {
+	return predicate.APIKey(sql.FieldIn(FieldRiskBlockedAt, vs...))
+}
+
+// RiskBlockedAtNotIn applies the NotIn predicate on the "risk_blocked_at" field.
+func RiskBlockedAtNotIn(vs ...time.Time) predicate.APIKey {
+	return predicate.APIKey(sql.FieldNotIn(FieldRiskBlockedAt, vs...))
+}
+
+// RiskBlockedAtGT applies the GT predicate on the "risk_blocked_at" field.
+func RiskBlockedAtGT(v time.Time) predicate.APIKey {
+	return predicate.APIKey(sql.FieldGT(FieldRiskBlockedAt, v))
+}
+
+// RiskBlockedAtGTE applies the GTE predicate on the "risk_blocked_at" field.
+func RiskBlockedAtGTE(v time.Time) predicate.APIKey {
+	return predicate.APIKey(sql.FieldGTE(FieldRiskBlockedAt, v))
+}
+
+// RiskBlockedAtLT applies the LT predicate on the "risk_blocked_at" field.
+func RiskBlockedAtLT(v time.Time) predicate.APIKey {
+	return predicate.APIKey(sql.FieldLT(FieldRiskBlockedAt, v))
+}
+
+// RiskBlockedAtLTE applies the LTE predicate on the "risk_blocked_at" field.
+func RiskBlockedAtLTE(v time.Time) predicate.APIKey {
+	return predicate.APIKey(sql.FieldLTE(FieldRiskBlockedAt, v))
+}
+
+// RiskBlockedAtIsNil applies the IsNil predicate on the "risk_blocked_at" field.
+func RiskBlockedAtIsNil() predicate.APIKey {
+	return predicate.APIKey(sql.FieldIsNull(FieldRiskBlockedAt))
+}
+
+// RiskBlockedAtNotNil applies the NotNil predicate on the "risk_blocked_at" field.
+func RiskBlockedAtNotNil() predicate.APIKey {
+	return predicate.APIKey(sql.FieldNotNull(FieldRiskBlockedAt))
 }
 
 // LastUsedAtEQ applies the EQ predicate on the "last_used_at" field.
@@ -1186,6 +1321,29 @@ func HasUsageLogs() predicate.APIKey {
 func HasUsageLogsWith(preds ...predicate.UsageLog) predicate.APIKey {
 	return predicate.APIKey(func(s *sql.Selector) {
 		step := newUsageLogsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasRiskEvents applies the HasEdge predicate on the "risk_events" edge.
+func HasRiskEvents() predicate.APIKey {
+	return predicate.APIKey(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, RiskEventsTable, RiskEventsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRiskEventsWith applies the HasEdge predicate on the "risk_events" edge with a given conditions (other predicates).
+func HasRiskEventsWith(preds ...predicate.APIKeyRiskEvent) predicate.APIKey {
+	return predicate.APIKey(func(s *sql.Selector) {
+		step := newRiskEventsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

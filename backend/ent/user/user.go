@@ -71,6 +71,10 @@ const (
 	EdgeAssignedSubscriptions = "assigned_subscriptions"
 	// EdgeAnnouncementReads holds the string denoting the announcement_reads edge name in mutations.
 	EdgeAnnouncementReads = "announcement_reads"
+	// EdgeMessages holds the string denoting the messages edge name in mutations.
+	EdgeMessages = "messages"
+	// EdgeAPIKeyRiskEvents holds the string denoting the api_key_risk_events edge name in mutations.
+	EdgeAPIKeyRiskEvents = "api_key_risk_events"
 	// EdgeAllowedGroups holds the string denoting the allowed_groups edge name in mutations.
 	EdgeAllowedGroups = "allowed_groups"
 	// EdgeUsageLogs holds the string denoting the usage_logs edge name in mutations.
@@ -126,6 +130,20 @@ const (
 	AnnouncementReadsInverseTable = "announcement_reads"
 	// AnnouncementReadsColumn is the table column denoting the announcement_reads relation/edge.
 	AnnouncementReadsColumn = "user_id"
+	// MessagesTable is the table that holds the messages relation/edge.
+	MessagesTable = "user_messages"
+	// MessagesInverseTable is the table name for the UserMessage entity.
+	// It exists in this package in order to avoid circular dependency with the "usermessage" package.
+	MessagesInverseTable = "user_messages"
+	// MessagesColumn is the table column denoting the messages relation/edge.
+	MessagesColumn = "user_id"
+	// APIKeyRiskEventsTable is the table that holds the api_key_risk_events relation/edge.
+	APIKeyRiskEventsTable = "api_key_risk_events"
+	// APIKeyRiskEventsInverseTable is the table name for the APIKeyRiskEvent entity.
+	// It exists in this package in order to avoid circular dependency with the "apikeyriskevent" package.
+	APIKeyRiskEventsInverseTable = "api_key_risk_events"
+	// APIKeyRiskEventsColumn is the table column denoting the api_key_risk_events relation/edge.
+	APIKeyRiskEventsColumn = "user_id"
 	// AllowedGroupsTable is the table that holds the allowed_groups relation/edge. The primary key declared below.
 	AllowedGroupsTable = "user_allowed_groups"
 	// AllowedGroupsInverseTable is the table name for the Group entity.
@@ -480,6 +498,34 @@ func ByAnnouncementReads(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption
 	}
 }
 
+// ByMessagesCount orders the results by messages count.
+func ByMessagesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMessagesStep(), opts...)
+	}
+}
+
+// ByMessages orders the results by messages terms.
+func ByMessages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMessagesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAPIKeyRiskEventsCount orders the results by api_key_risk_events count.
+func ByAPIKeyRiskEventsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAPIKeyRiskEventsStep(), opts...)
+	}
+}
+
+// ByAPIKeyRiskEvents orders the results by api_key_risk_events terms.
+func ByAPIKeyRiskEvents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAPIKeyRiskEventsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByAllowedGroupsCount orders the results by allowed_groups count.
 func ByAllowedGroupsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -638,6 +684,20 @@ func newAnnouncementReadsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AnnouncementReadsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, AnnouncementReadsTable, AnnouncementReadsColumn),
+	)
+}
+func newMessagesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MessagesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MessagesTable, MessagesColumn),
+	)
+}
+func newAPIKeyRiskEventsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(APIKeyRiskEventsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, APIKeyRiskEventsTable, APIKeyRiskEventsColumn),
 	)
 }
 func newAllowedGroupsStep() *sqlgraph.Step {

@@ -18,6 +18,8 @@ var (
 		{Name: "key", Type: field.TypeString, Unique: true, Size: 128},
 		{Name: "name", Type: field.TypeString, Size: 100},
 		{Name: "status", Type: field.TypeString, Size: 20, Default: "active"},
+		{Name: "risk_blocked_reason", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "risk_blocked_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
 		{Name: "last_used_at", Type: field.TypeTime, Nullable: true},
 		{Name: "ip_whitelist", Type: field.TypeJSON, Nullable: true},
 		{Name: "ip_blacklist", Type: field.TypeJSON, Nullable: true},
@@ -44,13 +46,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "api_keys_groups_api_keys",
-				Columns:    []*schema.Column{APIKeysColumns[22]},
+				Columns:    []*schema.Column{APIKeysColumns[24]},
 				RefColumns: []*schema.Column{GroupsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "api_keys_users_api_keys",
-				Columns:    []*schema.Column{APIKeysColumns[23]},
+				Columns:    []*schema.Column{APIKeysColumns[25]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -59,12 +61,12 @@ var (
 			{
 				Name:    "apikey_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{APIKeysColumns[23]},
+				Columns: []*schema.Column{APIKeysColumns[25]},
 			},
 			{
 				Name:    "apikey_group_id",
 				Unique:  false,
-				Columns: []*schema.Column{APIKeysColumns[22]},
+				Columns: []*schema.Column{APIKeysColumns[24]},
 			},
 			{
 				Name:    "apikey_status",
@@ -79,17 +81,91 @@ var (
 			{
 				Name:    "apikey_last_used_at",
 				Unique:  false,
-				Columns: []*schema.Column{APIKeysColumns[7]},
+				Columns: []*schema.Column{APIKeysColumns[9]},
 			},
 			{
 				Name:    "apikey_quota_quota_used",
 				Unique:  false,
-				Columns: []*schema.Column{APIKeysColumns[10], APIKeysColumns[11]},
+				Columns: []*schema.Column{APIKeysColumns[12], APIKeysColumns[13]},
 			},
 			{
 				Name:    "apikey_expires_at",
 				Unique:  false,
-				Columns: []*schema.Column{APIKeysColumns[12]},
+				Columns: []*schema.Column{APIKeysColumns[14]},
+			},
+		},
+	}
+	// APIKeyRiskEventsColumns holds the columns for the "api_key_risk_events" table.
+	APIKeyRiskEventsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "rule_code", Type: field.TypeString, Size: 64},
+		{Name: "severity", Type: field.TypeString, Size: 20},
+		{Name: "score", Type: field.TypeInt, Default: 0},
+		{Name: "status", Type: field.TypeString, Size: 20, Default: "open"},
+		{Name: "evidence", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "time_bucket", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "blocked_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "resolved_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "resolved_by", Type: field.TypeInt64, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "api_key_id", Type: field.TypeInt64},
+		{Name: "user_id", Type: field.TypeInt64},
+	}
+	// APIKeyRiskEventsTable holds the schema information for the "api_key_risk_events" table.
+	APIKeyRiskEventsTable = &schema.Table{
+		Name:       "api_key_risk_events",
+		Columns:    APIKeyRiskEventsColumns,
+		PrimaryKey: []*schema.Column{APIKeyRiskEventsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "api_key_risk_events_api_keys_risk_events",
+				Columns:    []*schema.Column{APIKeyRiskEventsColumns[12]},
+				RefColumns: []*schema.Column{APIKeysColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "api_key_risk_events_users_api_key_risk_events",
+				Columns:    []*schema.Column{APIKeyRiskEventsColumns[13]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "apikeyriskevent_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyRiskEventsColumns[13]},
+			},
+			{
+				Name:    "apikeyriskevent_api_key_id",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyRiskEventsColumns[12]},
+			},
+			{
+				Name:    "apikeyriskevent_rule_code",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyRiskEventsColumns[1]},
+			},
+			{
+				Name:    "apikeyriskevent_severity",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyRiskEventsColumns[2]},
+			},
+			{
+				Name:    "apikeyriskevent_status",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyRiskEventsColumns[4]},
+			},
+			{
+				Name:    "apikeyriskevent_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{APIKeyRiskEventsColumns[10]},
+			},
+			{
+				Name:    "apikeyriskevent_api_key_id_rule_code_time_bucket",
+				Unique:  true,
+				Columns: []*schema.Column{APIKeyRiskEventsColumns[12], APIKeyRiskEventsColumns[1], APIKeyRiskEventsColumns[6]},
 			},
 		},
 	}
@@ -1637,6 +1713,55 @@ var (
 			},
 		},
 	}
+	// UserMessagesColumns holds the columns for the "user_messages" table.
+	UserMessagesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "type", Type: field.TypeString, Size: 50},
+		{Name: "title", Type: field.TypeString, Size: 200},
+		{Name: "content", Type: field.TypeString, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "status", Type: field.TypeString, Size: 20, Default: "unread"},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "read_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "user_id", Type: field.TypeInt64},
+	}
+	// UserMessagesTable holds the schema information for the "user_messages" table.
+	UserMessagesTable = &schema.Table{
+		Name:       "user_messages",
+		Columns:    UserMessagesColumns,
+		PrimaryKey: []*schema.Column{UserMessagesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_messages_users_messages",
+				Columns:    []*schema.Column{UserMessagesColumns[9]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "usermessage_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{UserMessagesColumns[9]},
+			},
+			{
+				Name:    "usermessage_status",
+				Unique:  false,
+				Columns: []*schema.Column{UserMessagesColumns[4]},
+			},
+			{
+				Name:    "usermessage_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UserMessagesColumns[7]},
+			},
+			{
+				Name:    "usermessage_user_id_status_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UserMessagesColumns[9], UserMessagesColumns[4], UserMessagesColumns[7]},
+			},
+		},
+	}
 	// UserPlatformQuotasColumns holds the columns for the "user_platform_quotas" table.
 	UserPlatformQuotasColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -1776,6 +1901,7 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		APIKeysTable,
+		APIKeyRiskEventsTable,
 		AccountsTable,
 		AccountGroupsTable,
 		AnnouncementsTable,
@@ -1808,6 +1934,7 @@ var (
 		UserAllowedGroupsTable,
 		UserAttributeDefinitionsTable,
 		UserAttributeValuesTable,
+		UserMessagesTable,
 		UserPlatformQuotasTable,
 		UserSubscriptionsTable,
 	}
@@ -1818,6 +1945,11 @@ func init() {
 	APIKeysTable.ForeignKeys[1].RefTable = UsersTable
 	APIKeysTable.Annotation = &entsql.Annotation{
 		Table: "api_keys",
+	}
+	APIKeyRiskEventsTable.ForeignKeys[0].RefTable = APIKeysTable
+	APIKeyRiskEventsTable.ForeignKeys[1].RefTable = UsersTable
+	APIKeyRiskEventsTable.Annotation = &entsql.Annotation{
+		Table: "api_key_risk_events",
 	}
 	AccountsTable.ForeignKeys[0].RefTable = ProxiesTable
 	AccountsTable.Annotation = &entsql.Annotation{
@@ -1942,6 +2074,10 @@ func init() {
 	UserAttributeValuesTable.ForeignKeys[1].RefTable = UserAttributeDefinitionsTable
 	UserAttributeValuesTable.Annotation = &entsql.Annotation{
 		Table: "user_attribute_values",
+	}
+	UserMessagesTable.ForeignKeys[0].RefTable = UsersTable
+	UserMessagesTable.Annotation = &entsql.Annotation{
+		Table: "user_messages",
 	}
 	UserPlatformQuotasTable.ForeignKeys[0].RefTable = UsersTable
 	UserPlatformQuotasTable.Annotation = &entsql.Annotation{

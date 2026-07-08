@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Wei-Shaw/sub2api/ent/announcementread"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
+	"github.com/Wei-Shaw/sub2api/ent/apikeyriskevent"
 	"github.com/Wei-Shaw/sub2api/ent/authidentity"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
@@ -26,6 +27,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/ent/userallowedgroup"
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
+	"github.com/Wei-Shaw/sub2api/ent/usermessage"
 	"github.com/Wei-Shaw/sub2api/ent/userplatformquota"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
 )
@@ -42,6 +44,8 @@ type UserQuery struct {
 	withSubscriptions         *UserSubscriptionQuery
 	withAssignedSubscriptions *UserSubscriptionQuery
 	withAnnouncementReads     *AnnouncementReadQuery
+	withMessages              *UserMessageQuery
+	withAPIKeyRiskEvents      *APIKeyRiskEventQuery
 	withAllowedGroups         *GroupQuery
 	withUsageLogs             *UsageLogQuery
 	withAttributeValues       *UserAttributeValueQuery
@@ -191,6 +195,50 @@ func (_q *UserQuery) QueryAnnouncementReads() *AnnouncementReadQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(announcementread.Table, announcementread.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.AnnouncementReadsTable, user.AnnouncementReadsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMessages chains the current query on the "messages" edge.
+func (_q *UserQuery) QueryMessages() *UserMessageQuery {
+	query := (&UserMessageClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(usermessage.Table, usermessage.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.MessagesTable, user.MessagesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAPIKeyRiskEvents chains the current query on the "api_key_risk_events" edge.
+func (_q *UserQuery) QueryAPIKeyRiskEvents() *APIKeyRiskEventQuery {
+	query := (&APIKeyRiskEventClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(apikeyriskevent.Table, apikeyriskevent.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.APIKeyRiskEventsTable, user.APIKeyRiskEventsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -593,6 +641,8 @@ func (_q *UserQuery) Clone() *UserQuery {
 		withSubscriptions:         _q.withSubscriptions.Clone(),
 		withAssignedSubscriptions: _q.withAssignedSubscriptions.Clone(),
 		withAnnouncementReads:     _q.withAnnouncementReads.Clone(),
+		withMessages:              _q.withMessages.Clone(),
+		withAPIKeyRiskEvents:      _q.withAPIKeyRiskEvents.Clone(),
 		withAllowedGroups:         _q.withAllowedGroups.Clone(),
 		withUsageLogs:             _q.withUsageLogs.Clone(),
 		withAttributeValues:       _q.withAttributeValues.Clone(),
@@ -660,6 +710,28 @@ func (_q *UserQuery) WithAnnouncementReads(opts ...func(*AnnouncementReadQuery))
 		opt(query)
 	}
 	_q.withAnnouncementReads = query
+	return _q
+}
+
+// WithMessages tells the query-builder to eager-load the nodes that are connected to
+// the "messages" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithMessages(opts ...func(*UserMessageQuery)) *UserQuery {
+	query := (&UserMessageClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withMessages = query
+	return _q
+}
+
+// WithAPIKeyRiskEvents tells the query-builder to eager-load the nodes that are connected to
+// the "api_key_risk_events" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithAPIKeyRiskEvents(opts ...func(*APIKeyRiskEventQuery)) *UserQuery {
+	query := (&APIKeyRiskEventClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAPIKeyRiskEvents = query
 	return _q
 }
 
@@ -840,12 +912,14 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [14]bool{
+		loadedTypes = [16]bool{
 			_q.withAPIKeys != nil,
 			_q.withRedeemCodes != nil,
 			_q.withSubscriptions != nil,
 			_q.withAssignedSubscriptions != nil,
 			_q.withAnnouncementReads != nil,
+			_q.withMessages != nil,
+			_q.withAPIKeyRiskEvents != nil,
 			_q.withAllowedGroups != nil,
 			_q.withUsageLogs != nil,
 			_q.withAttributeValues != nil,
@@ -912,6 +986,20 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadAnnouncementReads(ctx, query, nodes,
 			func(n *User) { n.Edges.AnnouncementReads = []*AnnouncementRead{} },
 			func(n *User, e *AnnouncementRead) { n.Edges.AnnouncementReads = append(n.Edges.AnnouncementReads, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withMessages; query != nil {
+		if err := _q.loadMessages(ctx, query, nodes,
+			func(n *User) { n.Edges.Messages = []*UserMessage{} },
+			func(n *User, e *UserMessage) { n.Edges.Messages = append(n.Edges.Messages, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withAPIKeyRiskEvents; query != nil {
+		if err := _q.loadAPIKeyRiskEvents(ctx, query, nodes,
+			func(n *User) { n.Edges.APIKeyRiskEvents = []*APIKeyRiskEvent{} },
+			func(n *User, e *APIKeyRiskEvent) { n.Edges.APIKeyRiskEvents = append(n.Edges.APIKeyRiskEvents, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1124,6 +1212,66 @@ func (_q *UserQuery) loadAnnouncementReads(ctx context.Context, query *Announcem
 	}
 	query.Where(predicate.AnnouncementRead(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(user.AnnouncementReadsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadMessages(ctx context.Context, query *UserMessageQuery, nodes []*User, init func(*User), assign func(*User, *UserMessage)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(usermessage.FieldUserID)
+	}
+	query.Where(predicate.UserMessage(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.MessagesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadAPIKeyRiskEvents(ctx context.Context, query *APIKeyRiskEventQuery, nodes []*User, init func(*User), assign func(*User, *APIKeyRiskEvent)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(apikeyriskevent.FieldUserID)
+	}
+	query.Where(predicate.APIKeyRiskEvent(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.APIKeyRiskEventsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

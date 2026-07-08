@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Wei-Shaw/sub2api/ent/announcementread"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
+	"github.com/Wei-Shaw/sub2api/ent/apikeyriskevent"
 	"github.com/Wei-Shaw/sub2api/ent/authidentity"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
@@ -23,6 +24,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
+	"github.com/Wei-Shaw/sub2api/ent/usermessage"
 	"github.com/Wei-Shaw/sub2api/ent/userplatformquota"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
 )
@@ -486,6 +488,36 @@ func (_u *UserUpdate) AddAnnouncementReads(v ...*AnnouncementRead) *UserUpdate {
 	return _u.AddAnnouncementReadIDs(ids...)
 }
 
+// AddMessageIDs adds the "messages" edge to the UserMessage entity by IDs.
+func (_u *UserUpdate) AddMessageIDs(ids ...int64) *UserUpdate {
+	_u.mutation.AddMessageIDs(ids...)
+	return _u
+}
+
+// AddMessages adds the "messages" edges to the UserMessage entity.
+func (_u *UserUpdate) AddMessages(v ...*UserMessage) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMessageIDs(ids...)
+}
+
+// AddAPIKeyRiskEventIDs adds the "api_key_risk_events" edge to the APIKeyRiskEvent entity by IDs.
+func (_u *UserUpdate) AddAPIKeyRiskEventIDs(ids ...int64) *UserUpdate {
+	_u.mutation.AddAPIKeyRiskEventIDs(ids...)
+	return _u
+}
+
+// AddAPIKeyRiskEvents adds the "api_key_risk_events" edges to the APIKeyRiskEvent entity.
+func (_u *UserUpdate) AddAPIKeyRiskEvents(v ...*APIKeyRiskEvent) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAPIKeyRiskEventIDs(ids...)
+}
+
 // AddAllowedGroupIDs adds the "allowed_groups" edge to the Group entity by IDs.
 func (_u *UserUpdate) AddAllowedGroupIDs(ids ...int64) *UserUpdate {
 	_u.mutation.AddAllowedGroupIDs(ids...)
@@ -714,6 +746,48 @@ func (_u *UserUpdate) RemoveAnnouncementReads(v ...*AnnouncementRead) *UserUpdat
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveAnnouncementReadIDs(ids...)
+}
+
+// ClearMessages clears all "messages" edges to the UserMessage entity.
+func (_u *UserUpdate) ClearMessages() *UserUpdate {
+	_u.mutation.ClearMessages()
+	return _u
+}
+
+// RemoveMessageIDs removes the "messages" edge to UserMessage entities by IDs.
+func (_u *UserUpdate) RemoveMessageIDs(ids ...int64) *UserUpdate {
+	_u.mutation.RemoveMessageIDs(ids...)
+	return _u
+}
+
+// RemoveMessages removes "messages" edges to UserMessage entities.
+func (_u *UserUpdate) RemoveMessages(v ...*UserMessage) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMessageIDs(ids...)
+}
+
+// ClearAPIKeyRiskEvents clears all "api_key_risk_events" edges to the APIKeyRiskEvent entity.
+func (_u *UserUpdate) ClearAPIKeyRiskEvents() *UserUpdate {
+	_u.mutation.ClearAPIKeyRiskEvents()
+	return _u
+}
+
+// RemoveAPIKeyRiskEventIDs removes the "api_key_risk_events" edge to APIKeyRiskEvent entities by IDs.
+func (_u *UserUpdate) RemoveAPIKeyRiskEventIDs(ids ...int64) *UserUpdate {
+	_u.mutation.RemoveAPIKeyRiskEventIDs(ids...)
+	return _u
+}
+
+// RemoveAPIKeyRiskEvents removes "api_key_risk_events" edges to APIKeyRiskEvent entities.
+func (_u *UserUpdate) RemoveAPIKeyRiskEvents(v ...*APIKeyRiskEvent) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAPIKeyRiskEventIDs(ids...)
 }
 
 // ClearAllowedGroups clears all "allowed_groups" edges to the Group entity.
@@ -1290,6 +1364,96 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(announcementread.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MessagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MessagesTable,
+			Columns: []string{user.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usermessage.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMessagesIDs(); len(nodes) > 0 && !_u.mutation.MessagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MessagesTable,
+			Columns: []string{user.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usermessage.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MessagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MessagesTable,
+			Columns: []string{user.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usermessage.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.APIKeyRiskEventsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.APIKeyRiskEventsTable,
+			Columns: []string{user.APIKeyRiskEventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(apikeyriskevent.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAPIKeyRiskEventsIDs(); len(nodes) > 0 && !_u.mutation.APIKeyRiskEventsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.APIKeyRiskEventsTable,
+			Columns: []string{user.APIKeyRiskEventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(apikeyriskevent.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.APIKeyRiskEventsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.APIKeyRiskEventsTable,
+			Columns: []string{user.APIKeyRiskEventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(apikeyriskevent.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -2135,6 +2299,36 @@ func (_u *UserUpdateOne) AddAnnouncementReads(v ...*AnnouncementRead) *UserUpdat
 	return _u.AddAnnouncementReadIDs(ids...)
 }
 
+// AddMessageIDs adds the "messages" edge to the UserMessage entity by IDs.
+func (_u *UserUpdateOne) AddMessageIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.AddMessageIDs(ids...)
+	return _u
+}
+
+// AddMessages adds the "messages" edges to the UserMessage entity.
+func (_u *UserUpdateOne) AddMessages(v ...*UserMessage) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMessageIDs(ids...)
+}
+
+// AddAPIKeyRiskEventIDs adds the "api_key_risk_events" edge to the APIKeyRiskEvent entity by IDs.
+func (_u *UserUpdateOne) AddAPIKeyRiskEventIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.AddAPIKeyRiskEventIDs(ids...)
+	return _u
+}
+
+// AddAPIKeyRiskEvents adds the "api_key_risk_events" edges to the APIKeyRiskEvent entity.
+func (_u *UserUpdateOne) AddAPIKeyRiskEvents(v ...*APIKeyRiskEvent) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAPIKeyRiskEventIDs(ids...)
+}
+
 // AddAllowedGroupIDs adds the "allowed_groups" edge to the Group entity by IDs.
 func (_u *UserUpdateOne) AddAllowedGroupIDs(ids ...int64) *UserUpdateOne {
 	_u.mutation.AddAllowedGroupIDs(ids...)
@@ -2363,6 +2557,48 @@ func (_u *UserUpdateOne) RemoveAnnouncementReads(v ...*AnnouncementRead) *UserUp
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveAnnouncementReadIDs(ids...)
+}
+
+// ClearMessages clears all "messages" edges to the UserMessage entity.
+func (_u *UserUpdateOne) ClearMessages() *UserUpdateOne {
+	_u.mutation.ClearMessages()
+	return _u
+}
+
+// RemoveMessageIDs removes the "messages" edge to UserMessage entities by IDs.
+func (_u *UserUpdateOne) RemoveMessageIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.RemoveMessageIDs(ids...)
+	return _u
+}
+
+// RemoveMessages removes "messages" edges to UserMessage entities.
+func (_u *UserUpdateOne) RemoveMessages(v ...*UserMessage) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMessageIDs(ids...)
+}
+
+// ClearAPIKeyRiskEvents clears all "api_key_risk_events" edges to the APIKeyRiskEvent entity.
+func (_u *UserUpdateOne) ClearAPIKeyRiskEvents() *UserUpdateOne {
+	_u.mutation.ClearAPIKeyRiskEvents()
+	return _u
+}
+
+// RemoveAPIKeyRiskEventIDs removes the "api_key_risk_events" edge to APIKeyRiskEvent entities by IDs.
+func (_u *UserUpdateOne) RemoveAPIKeyRiskEventIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.RemoveAPIKeyRiskEventIDs(ids...)
+	return _u
+}
+
+// RemoveAPIKeyRiskEvents removes "api_key_risk_events" edges to APIKeyRiskEvent entities.
+func (_u *UserUpdateOne) RemoveAPIKeyRiskEvents(v ...*APIKeyRiskEvent) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAPIKeyRiskEventIDs(ids...)
 }
 
 // ClearAllowedGroups clears all "allowed_groups" edges to the Group entity.
@@ -2969,6 +3205,96 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(announcementread.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MessagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MessagesTable,
+			Columns: []string{user.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usermessage.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMessagesIDs(); len(nodes) > 0 && !_u.mutation.MessagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MessagesTable,
+			Columns: []string{user.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usermessage.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MessagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MessagesTable,
+			Columns: []string{user.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usermessage.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.APIKeyRiskEventsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.APIKeyRiskEventsTable,
+			Columns: []string{user.APIKeyRiskEventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(apikeyriskevent.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAPIKeyRiskEventsIDs(); len(nodes) > 0 && !_u.mutation.APIKeyRiskEventsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.APIKeyRiskEventsTable,
+			Columns: []string{user.APIKeyRiskEventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(apikeyriskevent.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.APIKeyRiskEventsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.APIKeyRiskEventsTable,
+			Columns: []string{user.APIKeyRiskEventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(apikeyriskevent.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

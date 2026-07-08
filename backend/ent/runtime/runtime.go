@@ -10,6 +10,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/announcement"
 	"github.com/Wei-Shaw/sub2api/ent/announcementread"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
+	"github.com/Wei-Shaw/sub2api/ent/apikeyriskevent"
 	"github.com/Wei-Shaw/sub2api/ent/authidentity"
 	"github.com/Wei-Shaw/sub2api/ent/authidentitychannel"
 	"github.com/Wei-Shaw/sub2api/ent/channelmonitor"
@@ -39,6 +40,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/userallowedgroup"
 	"github.com/Wei-Shaw/sub2api/ent/userattributedefinition"
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
+	"github.com/Wei-Shaw/sub2api/ent/usermessage"
 	"github.com/Wei-Shaw/sub2api/ent/userplatformquota"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
 	"github.com/Wei-Shaw/sub2api/internal/domain"
@@ -110,37 +112,95 @@ func init() {
 	// apikey.StatusValidator is a validator for the "status" field. It is called by the builders before save.
 	apikey.StatusValidator = apikeyDescStatus.Validators[0].(func(string) error)
 	// apikeyDescQuota is the schema descriptor for quota field.
-	apikeyDescQuota := apikeyFields[8].Descriptor()
+	apikeyDescQuota := apikeyFields[10].Descriptor()
 	// apikey.DefaultQuota holds the default value on creation for the quota field.
 	apikey.DefaultQuota = apikeyDescQuota.Default.(float64)
 	// apikeyDescQuotaUsed is the schema descriptor for quota_used field.
-	apikeyDescQuotaUsed := apikeyFields[9].Descriptor()
+	apikeyDescQuotaUsed := apikeyFields[11].Descriptor()
 	// apikey.DefaultQuotaUsed holds the default value on creation for the quota_used field.
 	apikey.DefaultQuotaUsed = apikeyDescQuotaUsed.Default.(float64)
 	// apikeyDescRateLimit5h is the schema descriptor for rate_limit_5h field.
-	apikeyDescRateLimit5h := apikeyFields[11].Descriptor()
+	apikeyDescRateLimit5h := apikeyFields[13].Descriptor()
 	// apikey.DefaultRateLimit5h holds the default value on creation for the rate_limit_5h field.
 	apikey.DefaultRateLimit5h = apikeyDescRateLimit5h.Default.(float64)
 	// apikeyDescRateLimit1d is the schema descriptor for rate_limit_1d field.
-	apikeyDescRateLimit1d := apikeyFields[12].Descriptor()
+	apikeyDescRateLimit1d := apikeyFields[14].Descriptor()
 	// apikey.DefaultRateLimit1d holds the default value on creation for the rate_limit_1d field.
 	apikey.DefaultRateLimit1d = apikeyDescRateLimit1d.Default.(float64)
 	// apikeyDescRateLimit7d is the schema descriptor for rate_limit_7d field.
-	apikeyDescRateLimit7d := apikeyFields[13].Descriptor()
+	apikeyDescRateLimit7d := apikeyFields[15].Descriptor()
 	// apikey.DefaultRateLimit7d holds the default value on creation for the rate_limit_7d field.
 	apikey.DefaultRateLimit7d = apikeyDescRateLimit7d.Default.(float64)
 	// apikeyDescUsage5h is the schema descriptor for usage_5h field.
-	apikeyDescUsage5h := apikeyFields[14].Descriptor()
+	apikeyDescUsage5h := apikeyFields[16].Descriptor()
 	// apikey.DefaultUsage5h holds the default value on creation for the usage_5h field.
 	apikey.DefaultUsage5h = apikeyDescUsage5h.Default.(float64)
 	// apikeyDescUsage1d is the schema descriptor for usage_1d field.
-	apikeyDescUsage1d := apikeyFields[15].Descriptor()
+	apikeyDescUsage1d := apikeyFields[17].Descriptor()
 	// apikey.DefaultUsage1d holds the default value on creation for the usage_1d field.
 	apikey.DefaultUsage1d = apikeyDescUsage1d.Default.(float64)
 	// apikeyDescUsage7d is the schema descriptor for usage_7d field.
-	apikeyDescUsage7d := apikeyFields[16].Descriptor()
+	apikeyDescUsage7d := apikeyFields[18].Descriptor()
 	// apikey.DefaultUsage7d holds the default value on creation for the usage_7d field.
 	apikey.DefaultUsage7d = apikeyDescUsage7d.Default.(float64)
+	apikeyriskeventFields := schema.APIKeyRiskEvent{}.Fields()
+	_ = apikeyriskeventFields
+	// apikeyriskeventDescRuleCode is the schema descriptor for rule_code field.
+	apikeyriskeventDescRuleCode := apikeyriskeventFields[2].Descriptor()
+	// apikeyriskevent.RuleCodeValidator is a validator for the "rule_code" field. It is called by the builders before save.
+	apikeyriskevent.RuleCodeValidator = func() func(string) error {
+		validators := apikeyriskeventDescRuleCode.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(rule_code string) error {
+			for _, fn := range fns {
+				if err := fn(rule_code); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// apikeyriskeventDescSeverity is the schema descriptor for severity field.
+	apikeyriskeventDescSeverity := apikeyriskeventFields[3].Descriptor()
+	// apikeyriskevent.SeverityValidator is a validator for the "severity" field. It is called by the builders before save.
+	apikeyriskevent.SeverityValidator = func() func(string) error {
+		validators := apikeyriskeventDescSeverity.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(severity string) error {
+			for _, fn := range fns {
+				if err := fn(severity); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// apikeyriskeventDescScore is the schema descriptor for score field.
+	apikeyriskeventDescScore := apikeyriskeventFields[4].Descriptor()
+	// apikeyriskevent.DefaultScore holds the default value on creation for the score field.
+	apikeyriskevent.DefaultScore = apikeyriskeventDescScore.Default.(int)
+	// apikeyriskeventDescStatus is the schema descriptor for status field.
+	apikeyriskeventDescStatus := apikeyriskeventFields[5].Descriptor()
+	// apikeyriskevent.DefaultStatus holds the default value on creation for the status field.
+	apikeyriskevent.DefaultStatus = apikeyriskeventDescStatus.Default.(string)
+	// apikeyriskevent.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	apikeyriskevent.StatusValidator = apikeyriskeventDescStatus.Validators[0].(func(string) error)
+	// apikeyriskeventDescCreatedAt is the schema descriptor for created_at field.
+	apikeyriskeventDescCreatedAt := apikeyriskeventFields[11].Descriptor()
+	// apikeyriskevent.DefaultCreatedAt holds the default value on creation for the created_at field.
+	apikeyriskevent.DefaultCreatedAt = apikeyriskeventDescCreatedAt.Default.(func() time.Time)
+	// apikeyriskeventDescUpdatedAt is the schema descriptor for updated_at field.
+	apikeyriskeventDescUpdatedAt := apikeyriskeventFields[12].Descriptor()
+	// apikeyriskevent.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	apikeyriskevent.DefaultUpdatedAt = apikeyriskeventDescUpdatedAt.Default.(func() time.Time)
+	// apikeyriskevent.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	apikeyriskevent.UpdateDefaultUpdatedAt = apikeyriskeventDescUpdatedAt.UpdateDefault.(func() time.Time)
 	accountMixin := schema.Account{}.Mixin()
 	accountMixinHooks1 := accountMixin[1].Hooks()
 	account.Hooks[0] = accountMixinHooks1[0]
@@ -2018,6 +2078,64 @@ func init() {
 	userattributevalueDescValue := userattributevalueFields[2].Descriptor()
 	// userattributevalue.DefaultValue holds the default value on creation for the value field.
 	userattributevalue.DefaultValue = userattributevalueDescValue.Default.(string)
+	usermessageFields := schema.UserMessage{}.Fields()
+	_ = usermessageFields
+	// usermessageDescType is the schema descriptor for type field.
+	usermessageDescType := usermessageFields[1].Descriptor()
+	// usermessage.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	usermessage.TypeValidator = func() func(string) error {
+		validators := usermessageDescType.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(_type string) error {
+			for _, fn := range fns {
+				if err := fn(_type); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// usermessageDescTitle is the schema descriptor for title field.
+	usermessageDescTitle := usermessageFields[2].Descriptor()
+	// usermessage.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	usermessage.TitleValidator = func() func(string) error {
+		validators := usermessageDescTitle.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(title string) error {
+			for _, fn := range fns {
+				if err := fn(title); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// usermessageDescContent is the schema descriptor for content field.
+	usermessageDescContent := usermessageFields[3].Descriptor()
+	// usermessage.ContentValidator is a validator for the "content" field. It is called by the builders before save.
+	usermessage.ContentValidator = usermessageDescContent.Validators[0].(func(string) error)
+	// usermessageDescStatus is the schema descriptor for status field.
+	usermessageDescStatus := usermessageFields[4].Descriptor()
+	// usermessage.DefaultStatus holds the default value on creation for the status field.
+	usermessage.DefaultStatus = usermessageDescStatus.Default.(string)
+	// usermessage.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	usermessage.StatusValidator = usermessageDescStatus.Validators[0].(func(string) error)
+	// usermessageDescCreatedAt is the schema descriptor for created_at field.
+	usermessageDescCreatedAt := usermessageFields[7].Descriptor()
+	// usermessage.DefaultCreatedAt holds the default value on creation for the created_at field.
+	usermessage.DefaultCreatedAt = usermessageDescCreatedAt.Default.(func() time.Time)
+	// usermessageDescUpdatedAt is the schema descriptor for updated_at field.
+	usermessageDescUpdatedAt := usermessageFields[8].Descriptor()
+	// usermessage.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	usermessage.DefaultUpdatedAt = usermessageDescUpdatedAt.Default.(func() time.Time)
+	// usermessage.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	usermessage.UpdateDefaultUpdatedAt = usermessageDescUpdatedAt.UpdateDefault.(func() time.Time)
 	userplatformquotaMixin := schema.UserPlatformQuota{}.Mixin()
 	userplatformquotaMixinHooks1 := userplatformquotaMixin[1].Hooks()
 	userplatformquota.Hooks[0] = userplatformquotaMixinHooks1[0]
