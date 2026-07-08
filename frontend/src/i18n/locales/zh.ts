@@ -416,7 +416,8 @@ export default {
     channelMonitor: '渠道监控',
     channelStatus: '渠道状态',
     mcp: 'MCP 配置',
-    riskControl: '风控中心',
+    riskControl: '内容风控',
+    apiKeyRisk: 'Key 异常风控',
   },
 
   // Auth
@@ -2595,7 +2596,7 @@ export default {
     },
 
     riskControl: {
-      title: '风控中心',
+      title: '内容风控',
       description: '配置内容审计策略并查看审核记录',
       loadFailed: '加载风控中心失败',
       saveFailed: '保存内容审计配置失败',

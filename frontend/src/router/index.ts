@@ -568,8 +568,17 @@ const routes: RouteRecordRaw[] = [
       requiresAdmin: true,
       title: 'Risk Control',
       titleKey: 'admin.riskControl.title',
-      descriptionKey: 'admin.riskControl.description',
-      requiresRiskControl: true
+      descriptionKey: 'admin.riskControl.description'
+    }
+  },
+  {
+    path: '/admin/api-key-risk',
+    name: 'AdminAPIKeyRisk',
+    component: () => import('@/views/admin/APIKeyRiskView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'API Key Risk Control'
     }
   },
   {
