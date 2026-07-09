@@ -30,3 +30,11 @@ describe('AppSidebar header styles', () => {
     expect(sidebarBrandBlockMatch?.[0]).not.toContain('overflow: hidden;')
   })
 })
+
+describe('AppSidebar feature flags', () => {
+  it('gates the risk-control admin menu with the risk control feature flag', () => {
+    expect(componentSource).toContain('const flagRiskControl = makeSidebarFlag(FeatureFlags.riskControl)')
+    expect(componentSource).toContain("path: '/admin/risk-control'")
+    expect(componentSource).toContain('featureFlag: flagRiskControl')
+  })
+})
