@@ -55,6 +55,8 @@ WITH key_stats AS (
 	  AND ul.created_at < $3
 	  AND ak.deleted_at IS NULL
 	  AND ak.status = 'active'
+	  AND u.deleted_at IS NULL
+	  AND COALESCE(u.risk_control_whitelisted, FALSE) = FALSE
 	GROUP BY ul.user_id, u.email, ul.api_key_id, ak.name, ak.key
 ),
 user_stats AS (

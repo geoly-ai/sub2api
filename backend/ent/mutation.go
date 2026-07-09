@@ -40162,6 +40162,7 @@ type UserMutation struct {
 	addtotal_recharged            *float64
 	rpm_limit                     *int
 	addrpm_limit                  *int
+	risk_control_whitelisted      *bool
 	clearedFields                 map[string]struct{}
 	api_keys                      map[int64]struct{}
 	removedapi_keys               map[int64]struct{}
@@ -41318,6 +41319,42 @@ func (m *UserMutation) ResetRpmLimit() {
 	m.addrpm_limit = nil
 }
 
+// SetRiskControlWhitelisted sets the "risk_control_whitelisted" field.
+func (m *UserMutation) SetRiskControlWhitelisted(b bool) {
+	m.risk_control_whitelisted = &b
+}
+
+// RiskControlWhitelisted returns the value of the "risk_control_whitelisted" field in the mutation.
+func (m *UserMutation) RiskControlWhitelisted() (r bool, exists bool) {
+	v := m.risk_control_whitelisted
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRiskControlWhitelisted returns the old "risk_control_whitelisted" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldRiskControlWhitelisted(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRiskControlWhitelisted is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRiskControlWhitelisted requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRiskControlWhitelisted: %w", err)
+	}
+	return oldValue.RiskControlWhitelisted, nil
+}
+
+// ResetRiskControlWhitelisted resets all changes to the "risk_control_whitelisted" field.
+func (m *UserMutation) ResetRiskControlWhitelisted() {
+	m.risk_control_whitelisted = nil
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by ids.
 func (m *UserMutation) AddAPIKeyIDs(ids ...int64) {
 	if m.api_keys == nil {
@@ -42162,7 +42199,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 23)
+	fields := make([]string, 0, 24)
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
 	}
@@ -42232,6 +42269,9 @@ func (m *UserMutation) Fields() []string {
 	if m.rpm_limit != nil {
 		fields = append(fields, user.FieldRpmLimit)
 	}
+	if m.risk_control_whitelisted != nil {
+		fields = append(fields, user.FieldRiskControlWhitelisted)
+	}
 	return fields
 }
 
@@ -42286,6 +42326,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.TotalRecharged()
 	case user.FieldRpmLimit:
 		return m.RpmLimit()
+	case user.FieldRiskControlWhitelisted:
+		return m.RiskControlWhitelisted()
 	}
 	return nil, false
 }
@@ -42341,6 +42383,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldTotalRecharged(ctx)
 	case user.FieldRpmLimit:
 		return m.OldRpmLimit(ctx)
+	case user.FieldRiskControlWhitelisted:
+		return m.OldRiskControlWhitelisted(ctx)
 	}
 	return nil, fmt.Errorf("unknown User field %s", name)
 }
@@ -42510,6 +42554,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetRpmLimit(v)
+		return nil
+	case user.FieldRiskControlWhitelisted:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRiskControlWhitelisted(v)
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
@@ -42730,6 +42781,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldRpmLimit:
 		m.ResetRpmLimit()
+		return nil
+	case user.FieldRiskControlWhitelisted:
+		m.ResetRiskControlWhitelisted()
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)

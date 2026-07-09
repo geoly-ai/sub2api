@@ -132,26 +132,28 @@ type AdminService interface {
 
 // CreateUserInput represents input for creating a new user via admin operations.
 type CreateUserInput struct {
-	Email         string
-	Password      string
-	Username      string
-	Notes         string
-	Balance       *float64
-	Concurrency   int
-	RPMLimit      int
-	AllowedGroups []int64
+	Email                  string
+	Password               string
+	Username               string
+	Notes                  string
+	Balance                *float64
+	Concurrency            int
+	RPMLimit               int
+	RiskControlWhitelisted bool
+	AllowedGroups          []int64
 }
 
 type UpdateUserInput struct {
-	Email         string
-	Password      string
-	Username      *string
-	Notes         *string
-	Balance       *float64 // 使用指针区分"未提供"和"设置为0"
-	Concurrency   *int     // 使用指针区分"未提供"和"设置为0"
-	RPMLimit      *int     // 使用指针区分"未提供"和"设置为0"
-	Status        string
-	AllowedGroups *[]int64 // 使用指针区分"未提供"和"设置为空数组"
+	Email                  string
+	Password               string
+	Username               *string
+	Notes                  *string
+	Balance                *float64 // 使用指针区分"未提供"和"设置为0"
+	Concurrency            *int     // 使用指针区分"未提供"和"设置为0"
+	RPMLimit               *int     // 使用指针区分"未提供"和"设置为0"
+	RiskControlWhitelisted *bool
+	Status                 string
+	AllowedGroups          *[]int64 // 使用指针区分"未提供"和"设置为空数组"
 	// GroupRates 用户专属分组倍率配置
 	// map[groupID]*rate，nil 表示删除该分组的专属倍率
 	GroupRates map[int64]*float64
@@ -703,15 +705,16 @@ func (s *adminServiceImpl) CreateUser(ctx context.Context, input *CreateUserInpu
 	}
 
 	user := &User{
-		Email:         input.Email,
-		Username:      input.Username,
-		Notes:         input.Notes,
-		Role:          RoleUser, // Always create as regular user, never admin
-		Balance:       balance,
-		Concurrency:   input.Concurrency,
-		RPMLimit:      input.RPMLimit,
-		Status:        StatusActive,
-		AllowedGroups: input.AllowedGroups,
+		Email:                  input.Email,
+		Username:               input.Username,
+		Notes:                  input.Notes,
+		Role:                   RoleUser, // Always create as regular user, never admin
+		Balance:                balance,
+		Concurrency:            input.Concurrency,
+		RPMLimit:               input.RPMLimit,
+		RiskControlWhitelisted: input.RiskControlWhitelisted,
+		Status:                 StatusActive,
+		AllowedGroups:          input.AllowedGroups,
 	}
 	if err := user.SetPassword(input.Password); err != nil {
 		return nil, err
@@ -764,6 +767,7 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 	oldStatus := user.Status
 	oldRole := user.Role
 	oldRPMLimit := user.RPMLimit
+	oldRiskControlWhitelisted := user.RiskControlWhitelisted
 	oldAllowedGroups := append([]int64(nil), user.AllowedGroups...)
 
 	if input.Email != "" {
@@ -793,6 +797,9 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 	if input.RPMLimit != nil {
 		user.RPMLimit = *input.RPMLimit
 	}
+	if input.RiskControlWhitelisted != nil {
+		user.RiskControlWhitelisted = *input.RiskControlWhitelisted
+	}
 
 	if input.AllowedGroups != nil {
 		user.AllowedGroups = *input.AllowedGroups
@@ -812,7 +819,7 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 	if s.authCacheInvalidator != nil {
 		// RPMLimit 直接参与 billing_cache_service.checkRPM 的三级级联，
 		// allowed_groups 参与 API Key 专属分组授权判断；不失效缓存会让修改在一个 L2 TTL 内失去效果。
-		if user.Concurrency != oldConcurrency || user.Status != oldStatus || user.Role != oldRole || user.RPMLimit != oldRPMLimit || !sameInt64Set(user.AllowedGroups, oldAllowedGroups) {
+		if user.Concurrency != oldConcurrency || user.Status != oldStatus || user.Role != oldRole || user.RPMLimit != oldRPMLimit || user.RiskControlWhitelisted != oldRiskControlWhitelisted || !sameInt64Set(user.AllowedGroups, oldAllowedGroups) {
 			s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, user.ID)
 		}
 	}

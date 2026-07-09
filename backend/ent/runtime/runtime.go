@@ -1950,6 +1950,10 @@ func init() {
 	userDescRpmLimit := userFields[19].Descriptor()
 	// user.DefaultRpmLimit holds the default value on creation for the rpm_limit field.
 	user.DefaultRpmLimit = userDescRpmLimit.Default.(int)
+	// userDescRiskControlWhitelisted is the schema descriptor for risk_control_whitelisted field.
+	userDescRiskControlWhitelisted := userFields[20].Descriptor()
+	// user.DefaultRiskControlWhitelisted holds the default value on creation for the risk_control_whitelisted field.
+	user.DefaultRiskControlWhitelisted = userDescRiskControlWhitelisted.Default.(bool)
 	userallowedgroupFields := schema.UserAllowedGroup{}.Fields()
 	_ = userallowedgroupFields
 	// userallowedgroupDescCreatedAt is the schema descriptor for created_at field.

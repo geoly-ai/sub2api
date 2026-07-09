@@ -91,7 +91,7 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 			AbortWithError(c, 401, "API_KEY_DISABLED", "API key is disabled")
 			return
 		}
-		if apiKey.Status == service.StatusAPIKeyRiskBlocked {
+		if apiKey.Status == service.StatusAPIKeyRiskBlocked && (apiKey.User == nil || !apiKey.User.RiskControlWhitelisted) {
 			message := "API key 因疑似泄露或异常调用已被封禁，请在控制台更新 key"
 			if apiKey.RiskBlockedReason != nil && strings.TrimSpace(*apiKey.RiskBlockedReason) != "" {
 				message = strings.TrimSpace(*apiKey.RiskBlockedReason)

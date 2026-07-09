@@ -43,6 +43,8 @@ type AdminUser struct {
 
 	Notes      string     `json:"notes"`
 	LastUsedAt *time.Time `json:"last_used_at"`
+	// RiskControlWhitelisted 为 true 时，该用户不受 API Key 风控自动封禁规则限制。
+	RiskControlWhitelisted bool `json:"risk_control_whitelisted"`
 	// GroupRates 用户专属分组倍率配置
 	// map[groupID]rateMultiplier
 	GroupRates map[int64]float64 `json:"group_rates,omitempty"`

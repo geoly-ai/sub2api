@@ -170,6 +170,11 @@ func RpmLimit(v int) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldRpmLimit, v))
 }
 
+// RiskControlWhitelisted applies equality check predicate on the "risk_control_whitelisted" field. It's identical to RiskControlWhitelistedEQ.
+func RiskControlWhitelisted(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldRiskControlWhitelisted, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldCreatedAt, v))
@@ -1338,6 +1343,16 @@ func RpmLimitLT(v int) predicate.User {
 // RpmLimitLTE applies the LTE predicate on the "rpm_limit" field.
 func RpmLimitLTE(v int) predicate.User {
 	return predicate.User(sql.FieldLTE(FieldRpmLimit, v))
+}
+
+// RiskControlWhitelistedEQ applies the EQ predicate on the "risk_control_whitelisted" field.
+func RiskControlWhitelistedEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldRiskControlWhitelisted, v))
+}
+
+// RiskControlWhitelistedNEQ applies the NEQ predicate on the "risk_control_whitelisted" field.
+func RiskControlWhitelistedNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldRiskControlWhitelisted, v))
 }
 
 // HasAPIKeys applies the HasEdge predicate on the "api_keys" edge.

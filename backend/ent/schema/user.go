@@ -112,6 +112,9 @@ func (User) Fields() []ent.Field {
 		// 用户级每分钟请求数上限（0 = 不限制）。仅当所在分组未设置 rpm_limit 时作为兜底生效。
 		field.Int("rpm_limit").
 			Default(0),
+		field.Bool("risk_control_whitelisted").
+			Default(false).
+			Comment("Whether the user is exempt from API key risk-control auto-block rules"),
 	}
 }
 

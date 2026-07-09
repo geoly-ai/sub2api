@@ -61,6 +61,8 @@ const (
 	FieldTotalRecharged = "total_recharged"
 	// FieldRpmLimit holds the string denoting the rpm_limit field in the database.
 	FieldRpmLimit = "rpm_limit"
+	// FieldRiskControlWhitelisted holds the string denoting the risk_control_whitelisted field in the database.
+	FieldRiskControlWhitelisted = "risk_control_whitelisted"
 	// EdgeAPIKeys holds the string denoting the api_keys edge name in mutations.
 	EdgeAPIKeys = "api_keys"
 	// EdgeRedeemCodes holds the string denoting the redeem_codes edge name in mutations.
@@ -233,6 +235,7 @@ var Columns = []string{
 	FieldBalanceNotifyExtraEmails,
 	FieldTotalRecharged,
 	FieldRpmLimit,
+	FieldRiskControlWhitelisted,
 }
 
 var (
@@ -303,6 +306,8 @@ var (
 	DefaultTotalRecharged float64
 	// DefaultRpmLimit holds the default value on creation for the "rpm_limit" field.
 	DefaultRpmLimit int
+	// DefaultRiskControlWhitelisted holds the default value on creation for the "risk_control_whitelisted" field.
+	DefaultRiskControlWhitelisted bool
 )
 
 // OrderOption defines the ordering options for the User queries.
@@ -426,6 +431,11 @@ func ByTotalRecharged(opts ...sql.OrderTermOption) OrderOption {
 // ByRpmLimit orders the results by the rpm_limit field.
 func ByRpmLimit(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRpmLimit, opts...).ToFunc()
+}
+
+// ByRiskControlWhitelisted orders the results by the risk_control_whitelisted field.
+func ByRiskControlWhitelisted(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRiskControlWhitelisted, opts...).ToFunc()
 }
 
 // ByAPIKeysCount orders the results by api_keys count.
