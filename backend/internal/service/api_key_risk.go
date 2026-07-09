@@ -244,11 +244,12 @@ func buildAPIKeyRiskRules(c APIKeyRiskCandidate, now time.Time) []APIKeyRiskEven
 	out := make([]APIKeyRiskEvent, 0, 4)
 	ip30 := uniqueNonEmpty(c.IPs30m)
 	ip60 := uniqueNonEmpty(c.IPs60m)
-	userIP30 := uniqueNonEmpty(c.UserIPs30m)
 	uaFamilies := userAgentFamilies(c.UserAgents60m)
 	prefix30 := ipPrefixes(ip30)
 	prefix60 := ipPrefixes(ip60)
-	userPrefix30 := ipPrefixes(userIP30)
+	window30Start := c.WindowEnd.Add(-30 * time.Minute)
+	window60Start := c.WindowEnd.Add(-60 * time.Minute)
+	offHoursWindowStart := c.WindowEnd.Add(-8 * time.Hour)
 
 	base := func(rule, severity string, score int, status string, evidence APIKeyRiskEvidence) APIKeyRiskEvent {
 		return APIKeyRiskEvent{
@@ -267,16 +268,10 @@ func buildAPIKeyRiskRules(c APIKeyRiskCandidate, now time.Time) []APIKeyRiskEven
 		}
 	}
 
-	if c.Requests30m >= 10 && (len(ip30) >= 4 || len(prefix30) >= 3) {
-		out = append(out, base(APIKeyRiskRuleKeyMultiIP30m, APIKeyRiskSeverityHigh, 90, APIKeyRiskEventStatusBlocked, evidence(c, ip30, prefix30, uaFamilies, map[string]any{
+	if c.Requests30m >= 10 && len(ip30) >= 6 {
+		out = append(out, base(APIKeyRiskRuleKeyMultiIP30m, APIKeyRiskSeverityHigh, 90, APIKeyRiskEventStatusBlocked, evidence(window30Start, c.WindowEnd, ip30, prefix30, uaFamilies, map[string]any{
 			"requests": c.Requests30m, "ip_count": len(ip30), "ip_prefix_count": len(prefix30),
-			"threshold": "30m requests >= 10 and (ip_count >= 4 or ip_prefix_count >= 3)",
-		})))
-	}
-	if c.UserRequests30m >= 10 && (len(userIP30) >= 6 || len(userPrefix30) >= 4) && c.Requests30m*2 >= c.UserRequests30m {
-		out = append(out, base(APIKeyRiskRuleUserMultiIP30m, APIKeyRiskSeverityHigh, 90, APIKeyRiskEventStatusBlocked, evidence(c, userIP30, userPrefix30, uaFamilies, map[string]any{
-			"user_requests": c.UserRequests30m, "key_requests": c.Requests30m, "user_ip_count": len(userIP30), "user_ip_prefix_count": len(userPrefix30),
-			"threshold": "user 30m ip_count >= 6 or ip_prefix_count >= 4, concentrated on this key",
+			"threshold": "30m requests >= 10 and ip_count >= 6",
 		})))
 	}
 	if c.OffHoursRequests >= 50 {
@@ -292,13 +287,13 @@ func buildAPIKeyRiskRules(c APIKeyRiskCandidate, now time.Time) []APIKeyRiskEven
 			severity = APIKeyRiskSeverityHigh
 			score = 85
 		}
-		out = append(out, base(APIKeyRiskRuleOffHoursSpike, severity, score, status, evidence(c, uniqueNonEmpty(c.OffHoursIPs), ipPrefixes(c.OffHoursIPs), uaFamilies, map[string]any{
+		out = append(out, base(APIKeyRiskRuleOffHoursSpike, severity, score, status, evidence(offHoursWindowStart, c.WindowEnd, uniqueNonEmpty(c.OffHoursIPs), ipPrefixes(c.OffHoursIPs), uaFamilies, map[string]any{
 			"off_hours_requests": c.OffHoursRequests, "off_hours_ip_count": len(uniqueNonEmpty(c.OffHoursIPs)), "historical_hourly_avg": c.OffHoursHourlyAvg,
 			"threshold": "00:00-08:00 requests >= 50 and >= 3x historical average; auto-block only with >= 2 IPs",
 		})))
 	}
 	if c.Requests60m >= 10 && len(uaFamilies) >= 4 && len(prefix60) >= 3 {
-		out = append(out, base(APIKeyRiskRuleUAIPChurn60m, APIKeyRiskSeverityMedium, 60, APIKeyRiskEventStatusOpen, evidence(c, ip60, prefix60, uaFamilies, map[string]any{
+		out = append(out, base(APIKeyRiskRuleUAIPChurn60m, APIKeyRiskSeverityMedium, 60, APIKeyRiskEventStatusOpen, evidence(window60Start, c.WindowEnd, ip60, prefix60, uaFamilies, map[string]any{
 			"requests": c.Requests60m, "ua_family_count": len(uaFamilies), "ip_prefix_count": len(prefix60),
 			"threshold": "60m ua_family_count >= 4 and ip_prefix_count >= 3",
 		})))
@@ -306,10 +301,10 @@ func buildAPIKeyRiskRules(c APIKeyRiskCandidate, now time.Time) []APIKeyRiskEven
 	return out
 }
 
-func evidence(c APIKeyRiskCandidate, ips, prefixes, uaFamilies []string, extra map[string]any) APIKeyRiskEvidence {
+func evidence(windowStart, windowEnd time.Time, ips, prefixes, uaFamilies []string, extra map[string]any) APIKeyRiskEvidence {
 	ev := APIKeyRiskEvidence{
-		"window_start":       c.WindowStart,
-		"window_end":         c.WindowEnd,
+		"window_start":       windowStart,
+		"window_end":         windowEnd,
 		"sample_ips":         sampleStrings(ips, 8),
 		"sample_ip_prefixes": sampleStrings(prefixes, 8),
 		"sample_user_agents": sampleStrings(uaFamilies, 8),

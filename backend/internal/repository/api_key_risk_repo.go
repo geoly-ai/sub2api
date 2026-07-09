@@ -59,15 +59,6 @@ WITH key_stats AS (
 	  AND COALESCE(u.risk_control_whitelisted, FALSE) = FALSE
 	GROUP BY ul.user_id, u.email, ul.api_key_id, ak.name, ak.key
 ),
-user_stats AS (
-	SELECT
-		ul.user_id,
-		COUNT(*) AS user_requests_30m,
-		COALESCE(array_remove(array_agg(DISTINCT ul.ip_address), NULL), ARRAY[]::text[]) AS user_ips_30m
-	FROM usage_logs ul
-	WHERE ul.created_at >= $2 AND ul.created_at < $3
-	GROUP BY ul.user_id
-),
 off_hours AS (
 	SELECT
 		ul.api_key_id,
@@ -94,11 +85,9 @@ historical AS (
 SELECT
 	ks.user_id, ks.user_email, ks.api_key_id, ks.api_key_name, ks.api_key,
 	ks.requests_30m, ks.requests_60m, ks.ips_30m, ks.ips_60m, ks.user_agents_60m,
-	COALESCE(us.user_requests_30m, 0), COALESCE(us.user_ips_30m, ARRAY[]::text[]),
 	COALESCE(oh.off_hours_requests, 0), COALESCE(oh.off_hours_ips, ARRAY[]::text[]),
 	COALESCE(h.hourly_avg, 0)
 FROM key_stats ks
-LEFT JOIN user_stats us ON us.user_id = ks.user_id
 LEFT JOIN off_hours oh ON oh.api_key_id = ks.api_key_id
 LEFT JOIN historical h ON h.api_key_id = ks.api_key_id
 WHERE ks.requests_30m >= 10 OR ks.requests_60m >= 10 OR COALESCE(oh.off_hours_requests, 0) >= 50
@@ -111,11 +100,10 @@ WHERE ks.requests_30m >= 10 OR ks.requests_60m >= 10 OR COALESCE(oh.off_hours_re
 	out := []service.APIKeyRiskCandidate{}
 	for rows.Next() {
 		var c service.APIKeyRiskCandidate
-		var ips30, ips60, uas60, userIPs30, offIPs pq.StringArray
+		var ips30, ips60, uas60, offIPs pq.StringArray
 		if err := rows.Scan(
 			&c.UserID, &c.UserEmail, &c.APIKeyID, &c.APIKeyName, &c.APIKey,
 			&c.Requests30m, &c.Requests60m, &ips30, &ips60, &uas60,
-			&c.UserRequests30m, &userIPs30,
 			&c.OffHoursRequests, &offIPs,
 			&c.OffHoursHourlyAvg,
 		); err != nil {
@@ -124,7 +112,6 @@ WHERE ks.requests_30m >= 10 OR ks.requests_60m >= 10 OR COALESCE(oh.off_hours_re
 		c.IPs30m = []string(ips30)
 		c.IPs60m = []string(ips60)
 		c.UserAgents60m = []string(uas60)
-		c.UserIPs30m = []string(userIPs30)
 		c.OffHoursIPs = []string(offIPs)
 		c.WindowStart = windowStart
 		c.WindowEnd = now
