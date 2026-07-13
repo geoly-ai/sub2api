@@ -190,6 +190,8 @@ export default {
     channelMonitor: '渠道监控',
     channelStatus: '渠道状态',
     riskControl: '风控中心',
+    apiKeyRisk: 'API 密钥风控',
+    mcp: 'MCP',
   },
 
   // Auth

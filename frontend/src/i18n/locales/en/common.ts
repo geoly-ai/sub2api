@@ -190,6 +190,8 @@ export default {
     channelMonitor: 'Channel Monitor',
     channelStatus: 'Channel Status',
     riskControl: 'Risk Control',
+    apiKeyRisk: 'API Key Risk',
+    mcp: 'MCP',
   },
 
   // Auth
