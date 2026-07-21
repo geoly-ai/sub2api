@@ -16,7 +16,7 @@ func setupMCPRouter() (*gin.Engine, *stubAdminService) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 	adminSvc := newStubAdminService()
-	handler := NewUserHandler(adminSvc, nil, nil, nil)
+	handler := NewUserHandler(adminSvc, nil, nil, nil, nil, nil, nil)
 	router.POST("/api/v1/admin/mcp", handler.HandleMCP)
 	return router, adminSvc
 }
