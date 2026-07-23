@@ -117,6 +117,19 @@ security:
   # forwarded_client_ip_headers:
   #   - "True-Client-IP"
   #   - "X-CDN-Client-IP"
+  # Optional protection for scripted POST /auth/login attempts. It is disabled
+  # by default. When enabled, only the listed low-friction and standard domains
+  # bypass the browser-signal check; other domains receive a random 429 or a
+  # best-effort connection close before password verification.
+  # 可选的登录脚本防护，默认关闭。启用后，低摩擦和标准域名会绕过浏览器信号检查；
+  # 其他域名会在密码校验前随机收到 429 或尽力关闭连接。
+  login_abuse_protection:
+    enabled: false
+    low_friction_email_domains:
+      - "rijoy.ai"
+      - "cyberklick.com"
+    standard_email_domains:
+      - "gmail.com"
   url_allowlist:
     # Enable URL allowlist validation (disable to skip all URL checks)
     # 启用 URL 白名单验证（禁用则跳过所有 URL 检查）

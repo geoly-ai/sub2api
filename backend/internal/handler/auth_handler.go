@@ -2,7 +2,12 @@ package handler
 
 import (
 	"context"
+	cryptorand "crypto/rand"
 	"log/slog"
+	"math/big"
+	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -223,6 +228,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		response.BadRequest(c, "Invalid request: "+err.Error())
 		return
 	}
+	if h.applyLoginAbuseProtection(c, req.Email) {
+		return
+	}
 
 	// Turnstile 验证
 	if err := h.authService.VerifyTurnstile(c.Request.Context(), req.TurnstileToken, ip.GetClientIP(c)); err != nil {
@@ -262,6 +270,168 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	h.authService.RecordSuccessfulLogin(c.Request.Context(), user.ID)
 
 	h.respondWithTokenPair(c, user)
+}
+
+// applyLoginAbuseProtection adds friction before password verification for a
+// configured set of non-standard email domains. Browser headers are only a
+// risk signal, never an authentication mechanism: a client that presents the
+// expected signals still goes through the regular Turnstile and password flow.
+func (h *AuthHandler) applyLoginAbuseProtection(c *gin.Context, email string) bool {
+	if !h.shouldApplyStrictLoginAbuseProtection(c.Request, email) {
+		return false
+	}
+
+	domain := emailDomain(email)
+	slog.Warn("login_abuse_protection_triggered", "email_domain", domain)
+	// Keep the audit record accurate even when the HTTP/1 connection is closed
+	// before a response is written.
+	c.Status(http.StatusTooManyRequests)
+	if randomLoginAbuseDisconnect() && closeLoginConnection(c) {
+		return true
+	}
+
+	// A bounded, randomized retry period makes simple retry loops expensive
+	// without holding an application goroutine open as a silent blackhole would.
+	c.Header("Retry-After", strconv.Itoa(randomLoginAbuseRetryAfter()))
+	response.Error(c, http.StatusTooManyRequests, "Too many login attempts. Please retry later.")
+	c.Abort()
+	return true
+}
+
+func (h *AuthHandler) shouldApplyStrictLoginAbuseProtection(req *http.Request, email string) bool {
+	if h == nil || h.cfg == nil || !h.cfg.Security.LoginAbuseProtection.Enabled {
+		return false
+	}
+
+	policy := h.cfg.Security.LoginAbuseProtection
+	domain := emailDomain(email)
+	if domain == "" || domainInList(domain, policy.LowFrictionEmailDomains) || domainInList(domain, policy.StandardEmailDomains) {
+		return false
+	}
+	return !isBrowserLikeLoginRequest(req, h.cfg)
+}
+
+func emailDomain(email string) string {
+	email = strings.ToLower(strings.TrimSpace(email))
+	at := strings.LastIndexByte(email, '@')
+	if at < 1 || at == len(email)-1 {
+		return ""
+	}
+	return strings.TrimSpace(email[at+1:])
+}
+
+func domainInList(domain string, domains []string) bool {
+	for _, candidate := range domains {
+		if strings.EqualFold(domain, strings.TrimSpace(candidate)) {
+			return true
+		}
+	}
+	return false
+}
+
+func isBrowserLikeLoginRequest(req *http.Request, cfg *config.Config) bool {
+	if req == nil {
+		return false
+	}
+	expectedHosts := loginExpectedHosts(req, cfg)
+	if len(expectedHosts) == 0 {
+		return false
+	}
+	if !headerURLMatchesExpectedHost(req.Header.Get("Origin"), expectedHosts) &&
+		!headerURLMatchesExpectedHost(req.Header.Get("Referer"), expectedHosts) {
+		return false
+	}
+
+	fetchSite := strings.ToLower(strings.TrimSpace(req.Header.Get("Sec-Fetch-Site")))
+	if fetchSite != "same-origin" && fetchSite != "same-site" {
+		return false
+	}
+
+	return strings.TrimSpace(req.Header.Get("Sec-CH-UA")) != "" || strings.Contains(req.UserAgent(), "Mozilla/")
+}
+
+func loginExpectedHosts(req *http.Request, cfg *config.Config) map[string]struct{} {
+	hosts := make(map[string]struct{}, 2)
+	if host := hostname(req.Host); host != "" {
+		hosts[host] = struct{}{}
+	}
+	if cfg != nil {
+		if host := hostname(cfg.Server.FrontendURL); host != "" {
+			hosts[host] = struct{}{}
+		}
+	}
+	return hosts
+}
+
+func headerURLMatchesExpectedHost(raw string, expectedHosts map[string]struct{}) bool {
+	parsed, err := url.Parse(strings.TrimSpace(raw))
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return false
+	}
+	_, ok := expectedHosts[strings.ToLower(parsed.Hostname())]
+	return ok
+}
+
+func hostname(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+	if !strings.Contains(raw, "://") {
+		raw = "//" + raw
+	}
+	parsed, err := url.Parse(raw)
+	if err != nil {
+		return ""
+	}
+	return strings.ToLower(parsed.Hostname())
+}
+
+func randomLoginAbuseDisconnect() bool {
+	value, err := cryptorand.Int(cryptorand.Reader, big.NewInt(4))
+	return err == nil && value.Int64() == 0
+}
+
+func randomLoginAbuseRetryAfter() int {
+	// 30-300 seconds, inclusive. Fall back to the lowest delay if the system
+	// random source is temporarily unavailable.
+	value, err := cryptorand.Int(cryptorand.Reader, big.NewInt(271))
+	if err != nil {
+		return 30
+	}
+	return 30 + int(value.Int64())
+}
+
+// closeLoginConnection is intentionally best-effort. HTTP/2 and most reverse
+// proxies do not permit a handler to silently drop the client connection; in
+// those cases the caller falls back to the normal 429 response above.
+func closeLoginConnection(c *gin.Context) bool {
+	// Gin's ResponseWriter itself always advertises http.Hijacker, but its
+	// underlying writer may not (notably httptest, HTTP/2, and some proxies).
+	// Inspect the underlying writer before calling Hijack to avoid its panic.
+	writer := http.ResponseWriter(c.Writer)
+	for range 8 { // bounded to protect against a broken recursive wrapper
+		unwrapper, ok := writer.(interface{ Unwrap() http.ResponseWriter })
+		if !ok {
+			break
+		}
+		next := unwrapper.Unwrap()
+		if next == nil {
+			return false
+		}
+		writer = next
+	}
+	hijacker, ok := writer.(http.Hijacker)
+	if !ok {
+		return false
+	}
+	conn, _, err := hijacker.Hijack()
+	if err != nil {
+		return false
+	}
+	_ = conn.Close()
+	c.Abort()
+	return true
 }
 
 // TotpLoginResponse represents the response when 2FA is required

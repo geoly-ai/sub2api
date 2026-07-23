@@ -694,16 +694,26 @@ type ForwardedClientIPSettings struct {
 }
 
 type SecurityConfig struct {
-	URLAllowlist    URLAllowlistConfig   `mapstructure:"url_allowlist"`
-	ResponseHeaders ResponseHeaderConfig `mapstructure:"response_headers"`
-	CSP             CSPConfig            `mapstructure:"csp"`
-	ProxyFallback   ProxyFallbackConfig  `mapstructure:"proxy_fallback"`
-	ProxyProbe      ProxyProbeConfig     `mapstructure:"proxy_probe"`
+	URLAllowlist         URLAllowlistConfig         `mapstructure:"url_allowlist"`
+	ResponseHeaders      ResponseHeaderConfig       `mapstructure:"response_headers"`
+	CSP                  CSPConfig                  `mapstructure:"csp"`
+	ProxyFallback        ProxyFallbackConfig        `mapstructure:"proxy_fallback"`
+	ProxyProbe           ProxyProbeConfig           `mapstructure:"proxy_probe"`
+	LoginAbuseProtection LoginAbuseProtectionConfig `mapstructure:"login_abuse_protection"`
 	// TrustForwardedIPForAPIKeyACL enables legacy raw forwarded-header takeover.
 	// When disabled, server.trusted_proxies is authoritative for all client-IP consumers.
 	TrustForwardedIPForAPIKeyACL  bool                                       `mapstructure:"trust_forwarded_ip_for_api_key_acl"`
 	ForwardedClientIPHeaders      []string                                   `mapstructure:"forwarded_client_ip_headers" json:"forwarded_client_ip_headers" yaml:"forwarded_client_ip_headers"`
 	forwardedClientIPSettingsLive *atomic.Pointer[ForwardedClientIPSettings] `mapstructure:"-" json:"-" yaml:"-"`
+}
+
+// LoginAbuseProtectionConfig raises the cost of scripted password-login attempts
+// for email domains that are not explicitly classified as low-friction or standard.
+// It is disabled by default so existing API clients keep their current behavior.
+type LoginAbuseProtectionConfig struct {
+	Enabled                 bool     `mapstructure:"enabled"`
+	LowFrictionEmailDomains []string `mapstructure:"low_friction_email_domains"`
+	StandardEmailDomains    []string `mapstructure:"standard_email_domains"`
 }
 
 func NormalizeForwardedClientIPHeaders(headers []string) ([]string, error) {
@@ -1723,6 +1733,8 @@ func load(allowMissingJWTSecret bool) (*Config, error) {
 	cfg.CORS.AllowedOrigins = normalizeStringSlice(cfg.CORS.AllowedOrigins)
 	cfg.Security.ResponseHeaders.AdditionalAllowed = normalizeStringSlice(cfg.Security.ResponseHeaders.AdditionalAllowed)
 	cfg.Security.ResponseHeaders.ForceRemove = normalizeStringSlice(cfg.Security.ResponseHeaders.ForceRemove)
+	cfg.Security.LoginAbuseProtection.LowFrictionEmailDomains = normalizeStringSlice(cfg.Security.LoginAbuseProtection.LowFrictionEmailDomains)
+	cfg.Security.LoginAbuseProtection.StandardEmailDomains = normalizeStringSlice(cfg.Security.LoginAbuseProtection.StandardEmailDomains)
 	cfg.Security.CSP.Policy = strings.TrimSpace(cfg.Security.CSP.Policy)
 	forwardedClientIPHeaders, err := NormalizeForwardedClientIPHeaders(cfg.Security.ForwardedClientIPHeaders)
 	if err != nil {
@@ -1876,6 +1888,9 @@ func setDefaults() {
 	viper.SetDefault("security.csp.policy", DefaultCSPPolicy)
 	viper.SetDefault("security.proxy_probe.insecure_skip_verify", false)
 	viper.SetDefault("security.trust_forwarded_ip_for_api_key_acl", true)
+	viper.SetDefault("security.login_abuse_protection.enabled", false)
+	viper.SetDefault("security.login_abuse_protection.low_friction_email_domains", []string{"rijoy.ai", "cyberklick.com"})
+	viper.SetDefault("security.login_abuse_protection.standard_email_domains", []string{"gmail.com"})
 
 	// Security - disable direct fallback on proxy error
 	viper.SetDefault("security.proxy_fallback.allow_direct_on_error", false)
