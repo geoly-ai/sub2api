@@ -693,6 +693,17 @@ func TestLoadDefaultSecurityToggles(t *testing.T) {
 	}
 }
 
+func TestLoadLoginAbuseProtectionEnabledFromEnvironment(t *testing.T) {
+	resetViperWithJWTSecret(t)
+	t.Setenv("SECURITY_LOGIN_ABUSE_PROTECTION_ENABLED", "true")
+
+	cfg, err := Load()
+	require.NoError(t, err)
+	require.True(t, cfg.Security.LoginAbuseProtection.Enabled)
+	require.Equal(t, []string{"rijoy.ai", "cyberklick.com"}, cfg.Security.LoginAbuseProtection.LowFrictionEmailDomains)
+	require.Equal(t, []string{"gmail.com"}, cfg.Security.LoginAbuseProtection.StandardEmailDomains)
+}
+
 func TestLoadDefaultServerMode(t *testing.T) {
 	resetViperWithJWTSecret(t)
 
