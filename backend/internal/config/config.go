@@ -1889,7 +1889,7 @@ func setDefaults() {
 	viper.SetDefault("security.csp.policy", DefaultCSPPolicy)
 	viper.SetDefault("security.proxy_probe.insecure_skip_verify", false)
 	viper.SetDefault("security.trust_forwarded_ip_for_api_key_acl", true)
-	viper.SetDefault("security.login_abuse_protection.enabled", false)
+	viper.SetDefault("security.login_abuse_protection.enabled", true)
 	viper.SetDefault("security.login_abuse_protection.low_friction_email_domains", []string{"rijoy.ai", "cyberklick.com"})
 	viper.SetDefault("security.login_abuse_protection.standard_email_domains", []string{"gmail.com"})
 

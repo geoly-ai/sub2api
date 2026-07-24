@@ -16,11 +16,7 @@ services:
   # Sub2API Application
   # ===========================================================================
   sub2api:
-    # Build this checkout so local security fixes are actually deployed.
-    build:
-      context: ..
-      dockerfile: Dockerfile
-    image: sub2api:local
+    image: weishaw/sub2api:latest
     container_name: sub2api
     restart: unless-stopped
     ulimits:
@@ -55,8 +51,6 @@ services:
       - RUN_MODE=${RUN_MODE:-standard}
       - UPDATE_GITHUB_TOKEN=${UPDATE_GITHUB_TOKEN:-}
 
-      # Reject non-browser login attempts for non-whitelisted email domains.
-      - SECURITY_LOGIN_ABUSE_PROTECTION_ENABLED=${SECURITY_LOGIN_ABUSE_PROTECTION_ENABLED:-true}
 
       # =======================================================================
       # Database Configuration (PostgreSQL)

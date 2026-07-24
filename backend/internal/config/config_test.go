@@ -691,15 +691,18 @@ func TestLoadDefaultSecurityToggles(t *testing.T) {
 	if !cfg.Security.ResponseHeaders.Enabled {
 		t.Fatalf("ResponseHeaders.Enabled = false, want true")
 	}
+	if !cfg.Security.LoginAbuseProtection.Enabled {
+		t.Fatalf("LoginAbuseProtection.Enabled = false, want true")
+	}
 }
 
-func TestLoadLoginAbuseProtectionEnabledFromEnvironment(t *testing.T) {
+func TestLoadLoginAbuseProtectionCanBeDisabledFromEnvironment(t *testing.T) {
 	resetViperWithJWTSecret(t)
-	t.Setenv("SECURITY_LOGIN_ABUSE_PROTECTION_ENABLED", "true")
+	t.Setenv("SECURITY_LOGIN_ABUSE_PROTECTION_ENABLED", "false")
 
 	cfg, err := Load()
 	require.NoError(t, err)
-	require.True(t, cfg.Security.LoginAbuseProtection.Enabled)
+	require.False(t, cfg.Security.LoginAbuseProtection.Enabled)
 	require.Equal(t, []string{"rijoy.ai", "cyberklick.com"}, cfg.Security.LoginAbuseProtection.LowFrictionEmailDomains)
 	require.Equal(t, []string{"gmail.com"}, cfg.Security.LoginAbuseProtection.StandardEmailDomains)
 }
