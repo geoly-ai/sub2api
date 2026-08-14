@@ -22,6 +22,8 @@ services:
     pull_policy: ${SUB2API_PULL_POLICY:-always}
     container_name: sub2api
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     ulimits:
       nofile:
         soft: 100000
