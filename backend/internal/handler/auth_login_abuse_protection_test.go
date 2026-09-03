@@ -15,7 +15,7 @@ func TestLoginAbuseProtectionClassification(t *testing.T) {
 		LoginAbuseProtection: config.LoginAbuseProtectionConfig{
 			Enabled:                 true,
 			LowFrictionEmailDomains: []string{"rijoy.ai", "cyberklick.com"},
-			StandardEmailDomains:    []string{"gmail.com"},
+			StandardEmailDomains:    []string{"gmail.com", "qilyear.com"},
 		},
 	}}}
 
@@ -33,6 +33,7 @@ func TestLoginAbuseProtectionClassification(t *testing.T) {
 	require.False(t, h.shouldApplyStrictLoginAbuseProtection(newContext(nil).Request, "user@rijoy.ai"))
 	require.False(t, h.shouldApplyStrictLoginAbuseProtection(newContext(nil).Request, "user@cyberklick.com"))
 	require.False(t, h.shouldApplyStrictLoginAbuseProtection(newContext(nil).Request, "user@gmail.com"))
+	require.False(t, h.shouldApplyStrictLoginAbuseProtection(newContext(nil).Request, "user@qilyear.com"))
 	require.True(t, h.shouldApplyStrictLoginAbuseProtection(newContext(nil).Request, "user@example.net"))
 	require.False(t, h.shouldApplyStrictLoginAbuseProtection(newContext(map[string]string{
 		"Origin":         "https://app.example.test",

@@ -146,6 +146,7 @@ security:
       - "cyberklick.com"
     standard_email_domains:
       - "gmail.com"
+      - "qilyear.com"
   url_allowlist:
     # Enable URL allowlist validation (disable to skip all URL checks)
     # 启用 URL 白名单验证（禁用则跳过所有 URL 检查）

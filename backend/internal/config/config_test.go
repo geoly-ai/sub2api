@@ -799,7 +799,7 @@ func TestLoadLoginAbuseProtectionCanBeDisabledFromEnvironment(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, cfg.Security.LoginAbuseProtection.Enabled)
 	require.Equal(t, []string{"rijoy.ai", "cyberklick.com"}, cfg.Security.LoginAbuseProtection.LowFrictionEmailDomains)
-	require.Equal(t, []string{"gmail.com"}, cfg.Security.LoginAbuseProtection.StandardEmailDomains)
+	require.Equal(t, []string{"gmail.com", "qilyear.com"}, cfg.Security.LoginAbuseProtection.StandardEmailDomains)
 }
 
 func TestLoadDefaultServerMode(t *testing.T) {
