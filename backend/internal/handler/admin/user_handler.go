@@ -63,12 +63,13 @@ type CreateUserRequest struct {
 	Password               string   `json:"password" binding:"required,min=6"`
 	Username               string   `json:"username"`
 	Notes                  string   `json:"notes"`
+	Role                   string   `json:"role" binding:"omitempty,oneof=admin user"`
 	Balance                *float64 `json:"balance"`
 	Concurrency            int      `json:"concurrency"`
 	RPMLimit               int      `json:"rpm_limit"`
 	RiskControlWhitelisted bool     `json:"risk_control_whitelisted"`
-	Role                   string   `json:"role" binding:"omitempty,oneof=admin user"`
 	AllowedGroups          []int64  `json:"allowed_groups"`
+	RestrictPublicGroups   bool     `json:"restrict_public_groups"`
 }
 
 // UpdateUserRequest represents admin update user request
@@ -78,13 +79,14 @@ type UpdateUserRequest struct {
 	Password               string   `json:"password" binding:"omitempty,min=6"`
 	Username               *string  `json:"username"`
 	Notes                  *string  `json:"notes"`
+	Role                   string   `json:"role" binding:"omitempty,oneof=admin user"`
 	Balance                *float64 `json:"balance"`
 	Concurrency            *int     `json:"concurrency"`
 	RPMLimit               *int     `json:"rpm_limit"`
 	RiskControlWhitelisted *bool    `json:"risk_control_whitelisted"`
 	Status                 string   `json:"status" binding:"omitempty,oneof=active disabled"`
-	Role                   string   `json:"role" binding:"omitempty,oneof=admin user"`
 	AllowedGroups          *[]int64 `json:"allowed_groups"`
+	RestrictPublicGroups   *bool    `json:"restrict_public_groups"`
 	// GroupRates 用户专属分组倍率配置
 	// map[groupID]*rate，nil 表示删除该分组的专属倍率
 	GroupRates map[int64]*float64 `json:"group_rates"`
@@ -295,6 +297,7 @@ func (h *UserHandler) Create(c *gin.Context) {
 		RPMLimit:               req.RPMLimit,
 		RiskControlWhitelisted: req.RiskControlWhitelisted,
 		AllowedGroups:          req.AllowedGroups,
+		RestrictPublicGroups:   req.RestrictPublicGroups,
 		ActorAdminID:           getAdminIDFromContext(c),
 		Role:                   req.Role,
 	})
@@ -355,6 +358,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 		RiskControlWhitelisted: req.RiskControlWhitelisted,
 		Status:                 req.Status,
 		AllowedGroups:          req.AllowedGroups,
+		RestrictPublicGroups:   req.RestrictPublicGroups,
 		GroupRates:             req.GroupRates,
 		ActorAdminID:           getAdminIDFromContext(c),
 		Role:                   req.Role,
